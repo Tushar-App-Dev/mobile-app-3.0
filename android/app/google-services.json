@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "806021291186",
+    "project_id": "mmc-app-372811",
+    "storage_bucket": "mmc-app-372811.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:806021291186:android:85649698d4b6c22b9ebdab",
+        "android_client_info": {
+          "package_name": "com.mapmycrop.mmc"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "806021291186-p11btjer7rdgsjlv9q3hce9lj0pdi815.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-iaFwUQJ2BOJ2P_N9ei4agk6412J34Ko"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "806021291186-p11btjer7rdgsjlv9q3hce9lj0pdi815.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
