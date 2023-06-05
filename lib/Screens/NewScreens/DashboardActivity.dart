@@ -37,6 +37,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'FertilizerCalculaterActivity.dart';
 import 'Image_Overly.dart';
 import 'Instructions.dart';
+import 'Mmc_DashBoard.dart';
 import 'SelfProduceActivity.dart';
 // int temperature,pressure;
 // Icon weatherDisplayIcon;
@@ -209,7 +210,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
         0,
         "New Images are available",
         "Check your dashboard to see the Respected Images...",
-        RepeatInterval.weekly,
+        RepeatInterval.daily,
         NotificationDetails(
             android: AndroidNotificationDetails(channel.id, channel.name,
                 channelDescription: channel.description,
@@ -2631,6 +2632,8 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       'assets/new_images/logo.png')), //CachedNetworkImageProvider('https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTD8u1Nmrk78DSX0v2i_wTgS6tW5yvHSD7o6g&usqp=CAU')),
             ),
           ).onTap(() {
+            // showNotification();
+            Navigator.push((context), MaterialPageRoute(builder: (context)=>MmcCard()));
             // Navigator.of(context).push(
             //     MaterialPageRoute(builder: (_) => OverlayImagePage()));
           }),

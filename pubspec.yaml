@@ -70,6 +70,7 @@ dependencies:
   firebase_storage:
   cloud_firestore: ^2.5.3
   shimmer:
+  flutter_svg:
 
   flutter_localizations:
     sdk: flutter
@@ -143,6 +144,7 @@ flutter:
     - assets/illustrations/
     - assets/amsr2.png
     - assets/Banking_ic_Logout.png
+    - assets/svgImages/
 
 
   fonts:
