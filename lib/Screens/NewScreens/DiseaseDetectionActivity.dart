@@ -176,7 +176,7 @@ class _DiseaseDetectionActivityState extends State<DiseaseDetectionActivity> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var api_key = prefs.getString('api_key');
     var request = http.MultipartRequest('POST', Uri.parse(
-        'https://api.mapmycrop.store/ai/detect-disease?api_key=$api_key'));
+        'https://api.mapmycrop.com/ai/detect-disease?api_key=$api_key'));
 
     request.files.add(await http.MultipartFile.fromPath('image', image.path, contentType: MediaType("image", 'png')));
     var response = await request.send();

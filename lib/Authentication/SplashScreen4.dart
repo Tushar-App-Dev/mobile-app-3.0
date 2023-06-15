@@ -34,7 +34,7 @@ class _SplashScreen4State extends State<SplashScreen4> {
     SplashModel(
       img: 'assets/images/farm_image-4.png',
       text:
-          "Manage your fields easier \nMonitor online.\nDetect in real-time. Act smart",
+          "Manage your fields easier \nMonitor online.\nDetect in real-time.\nAct smart",
       bg: Colors.white,
       button: Color(0xFF4756DF),
     ),

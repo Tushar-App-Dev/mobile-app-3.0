@@ -2346,7 +2346,7 @@ class WeatherData {
     var latitude,longitude;
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var api_key = prefs.getString('api_key');
-    var response1 = await http.get(Uri.parse('https://api.mapmycrop.store/farm/?api_key=$api_key'));
+    var response1 = await http.get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     var data = jsonDecode(response1.body);
     //print(data);
     if(data['features'].length>0){

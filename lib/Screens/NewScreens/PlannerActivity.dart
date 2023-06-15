@@ -546,7 +546,7 @@ class _PlannerActivityState extends State<PlannerActivity> {
   getAllEvents() async {
     for (int i = 0; i < farmIdList.length; i++) {
       var response = await http.get(Uri.parse(
-          'https://api.mapmycrop.store/calendar-data/${farmIdList[i]}?api_key=$api_key'));
+          'https://api.mapmycrop.com/calendar-data/${farmIdList[i]}?api_key=$api_key'));
       print(response.body);
 
       setState(() {
@@ -645,7 +645,7 @@ class _PlannerActivityState extends State<PlannerActivity> {
                 print(farm);
                 print(api_key);
                 var response = await http.get(Uri.parse(
-                    'https://api.mapmycrop.store/calendar-data/$farm?api_key=$api_key'));
+                    'https://api.mapmycrop.com/calendar-data/$farm?api_key=$api_key'));
                 print(response.body);
 
                 setState(() {
@@ -901,7 +901,7 @@ class _PlannerActivityState extends State<PlannerActivity> {
                                                                       //     index, context);
                                                                       var response =
                                                                           await http
-                                                                              .delete(Uri.parse('https://api.mapmycrop.store/calendar-data/${eventList[index]['id']}?api_key=$api_key'));
+                                                                              .delete(Uri.parse('https://api.mapmycrop.com/calendar-data/${eventList[index]['id']}?api_key=$api_key'));
                                                                       print(response
                                                                           .body);
                                                                       print(response
@@ -1493,7 +1493,7 @@ class _PlannerActivityState extends State<PlannerActivity> {
   _deleteEvent(String ID, int index, BuildContext context) async {
     print(ID);
     var response = await http.delete(Uri.parse(
-        'https://api.mapmycrop.store/calendar-data/${eventList[index]['id']}?api_key=$api_key'));
+        'https://api.mapmycrop.com/calendar-data/${eventList[index]['id']}?api_key=$api_key'));
     print(response.body);
     print(response.statusCode);
 

@@ -83,7 +83,7 @@ class _FeedbackActivityState extends State<FeedbackActivity> {
 
                         };
                        // http.post()
-                       var response = await  http.post(Uri.parse('https://api.mapmycrop.store/feedback/?api_key=$api_key',
+                       var response = await  http.post(Uri.parse('https://api.mapmycrop.com/feedback/?api_key=$api_key',
                         ),
                         headers: {
                          'accept':'application/json',

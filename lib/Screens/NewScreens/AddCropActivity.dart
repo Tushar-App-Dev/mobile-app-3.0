@@ -64,8 +64,8 @@ class _AddCropActivityState extends State<AddCropActivity> {
     super.initState();
   }
   getCrops(String api_key) async{
-    // var response = await http.get(Uri.parse("https://api.mapmycrop.store/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
-    var response = await http.get(Uri.parse("https://api.mapmycrop.store/crop?api_key=$api_key"));
+    // var response = await http.get(Uri.parse("https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
+    var response = await http.get(Uri.parse("https://api.mapmycrop.com/crop?api_key=$api_key"));
     var cropData = jsonDecode(response.body);
     //print(cropData);
     for(int i = 0;i<cropData.length;i++){
@@ -126,7 +126,7 @@ class _AddCropActivityState extends State<AddCropActivity> {
 
 
     var response = await http.post(
-        Uri.parse('https://api.mapmycrop.store/farm/add-crop?api_key=$api_key&farm_id=$farm'),
+        Uri.parse('https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=$farm'),
         headers: {
           'accept': 'application/json',
           'Content-Type': 'application/json'

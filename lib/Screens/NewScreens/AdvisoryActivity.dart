@@ -41,7 +41,7 @@ class _AdvisoryActivityState extends State<AdvisoryActivity> {
     //print(Icons.api);
 
     final response = await http
-        .get(Uri.parse('https://api.mapmycrop.store/disease/all?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/disease/all?api_key=$api_key'));
     if (response.statusCode == 200) {
       datavalue=jsonDecode(response.body);
       for(int i=0;i<datavalue.length;i++){

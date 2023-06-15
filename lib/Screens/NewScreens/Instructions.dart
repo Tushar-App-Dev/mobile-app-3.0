@@ -112,7 +112,7 @@ class _DrawGuideActivityState extends State<DrawGuideActivity> {
               SizedBox(height: 10,),
               SizedBox(
                   width: width(context)*0.7,
-                  child: ChangedLanguage(text:'Point the clockwise direction as youconnect your field. So that your field should be rectangul. triangular or square.',textAlign: TextAlign.center,style: TextStyle(fontSize: 12,fontWeight: FontWeight.w600),))
+                  child: ChangedLanguage(text:'Point in clockwise direction as you connect your field. So that your field should be rectangular. triangular or square.',textAlign: TextAlign.center,style: TextStyle(fontSize: 12,fontWeight: FontWeight.w600),))
             ],//textAlign: TextAlign.center,
           ),
           SizedBox(height: height(context)*0.05,),

@@ -293,10 +293,10 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
   }
 
   getCrops() async{
-    // var response = await http.get(Uri.parse("https://api.mapmycrop.store/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
+    // var response = await http.get(Uri.parse("https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var api_key1 = prefs.getString('api_key');
-    var response = await http.get(Uri.parse("https://api.mapmycrop.store/crop?api_key=$api_key1"));
+    var response = await http.get(Uri.parse("https://api.mapmycrop.com/crop?api_key=$api_key1"));
     var cropData = jsonDecode(response.body);
     print(cropData);
     for(int i = 0;i<cropData.length;i++){
@@ -1227,7 +1227,7 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
       };
 
       var response = await http.post(
-          Uri.parse('https://api.mapmycrop.store/farm/add-crop?api_key=$api_key&farm_id=$farmId'),
+          Uri.parse('https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=$farmId'),
           headers: {
             'accept': 'application/json',
             'Content-Type': 'application/json'

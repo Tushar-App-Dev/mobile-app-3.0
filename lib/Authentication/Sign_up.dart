@@ -322,7 +322,7 @@ class _SignupState extends State<Signup> {
         "password": "$pwd"
         };
     var response1 = await
-    http.post(Uri.parse('https://api.mapmycrop.store/auth/register'),
+    http.post(Uri.parse('https://api.mapmycrop.com/auth/register'),
       headers: {
         "Content-Type" : "application/json"
       },

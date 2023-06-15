@@ -40,7 +40,7 @@ import '../Screens/constant/Constant.dart';
 //       "phone": "${widget.phone}",
 //     };
 //
-//     var response = await http.post(Uri.parse('https://api.mapmycrop.store/auth/send_otp'),
+//     var response = await http.post(Uri.parse('https://api.mapmycrop.com/auth/send_otp'),
 //       headers: {
 //         "Content-Type" : "application/json"
 //       },
@@ -314,7 +314,7 @@ import '../Screens/constant/Constant.dart';
 //       "code":otp.toString(),
 //     };
 //
-//     var response = await http.post(Uri.parse('https://api.mapmycrop.store/auth/verify_otp'),
+//     var response = await http.post(Uri.parse('https://api.mapmycrop.com/auth/verify_otp'),
 //       headers: {
 //         "Content-Type" : "application/json"
 //       },
@@ -356,8 +356,9 @@ import '../Screens/constant/Constant.dart';
 class OtpPage extends StatefulWidget {
   final String ccode;
   final String phone;
+  final body;
 
-  const OtpPage({Key key, this.ccode, this.phone}) : super(key: key);
+  const OtpPage({Key key, this.ccode, this.phone, this.body}) : super(key: key);
 
   @override
   State<OtpPage> createState() => _OtpPageState();
@@ -368,17 +369,21 @@ class _OtpPageState extends State<OtpPage> with AutomaticKeepAliveClientMixin {
 
   Future<void> sendOTP() async {
     var body = {
+      "country_code" : "${widget.ccode}",
+
       "phone": "${widget.phone}",
     };
+    print(body);
 
-    var response = await http.post(Uri.parse('https://api.mapmycrop.store/auth/send_otp'),
+    var response = await http.post(Uri.parse('https://api.mapmycrop.com/auth/send_otp'),
       headers: {
         "Content-Type" : "application/json"
       },
       body: jsonEncode(body),
     );
+    print(body);
     var data = jsonDecode(response.body);
-    print(data);
+    print(' the data is $data');
     // prefs.setString('', value)
     // if(response.statusCode==200 ||response.statusCode==201 && data==true){
     //   QuickAlert.show(
@@ -440,8 +445,8 @@ class _OtpPageState extends State<OtpPage> with AutomaticKeepAliveClientMixin {
           //mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(height:100,),
-            OtpHeader(phone:widget.phone,ccode:widget.ccode),
-            RoundedWithCustomCursor(widget.phone),
+            OtpHeader(phone:widget.phone,ccode:widget.ccode,body:widget.body),
+            RoundedWithCustomCursor(widget.phone,body:widget.body),
             const SizedBox(height: 44),
             Text(
               'Didn’t receive code?',
@@ -473,7 +478,8 @@ class _OtpPageState extends State<OtpPage> with AutomaticKeepAliveClientMixin {
 class OtpHeader extends StatefulWidget {
   final String phone;
   final String ccode;
-  const OtpHeader({Key key, this.phone, this.ccode}) : super(key: key);
+  final body;
+  const OtpHeader({Key key, this.phone, this.ccode, this.body}) : super(key: key);
 
   @override
   State<OtpHeader> createState() => _OtpHeaderState();
@@ -492,14 +498,14 @@ class _OtpHeaderState extends State<OtpHeader> {
       "phone": "${widget.phone}",
     };
 
-    var response = await http.post(Uri.parse('https://api.mapmycrop.store/auth/send_otp'),
+    var response = await http.post(Uri.parse('https://api.mapmycrop.com/auth/send_otp'),
       headers: {
         "Content-Type" : "application/json"
       },
       body: jsonEncode(body),
     );
     var data = jsonDecode(response.body);
-    print(data);
+    print('data form header state is $data');
     // prefs.setString('', value)
     // if(response.statusCode==200 ||response.statusCode==201 && data==true){
     //   QuickAlert.show(
@@ -576,7 +582,8 @@ class _OtpHeaderState extends State<OtpHeader> {
 
 class RoundedWithCustomCursor extends StatefulWidget {
   final String phone;
-  const RoundedWithCustomCursor(this.phone, {Key key}) : super(key: key);
+  final body;
+  const RoundedWithCustomCursor(this.phone, {Key key, this.body}) : super(key: key);
 
   @override
   _RoundedWithCustomCursorState createState() =>
@@ -638,7 +645,7 @@ class _RoundedWithCustomCursorState extends State<RoundedWithCustomCursor> {
               hapticFeedbackType: HapticFeedbackType.lightImpact,
               onCompleted: (pin) {
                 debugPrint('onCompleted: $pin');
-                _verifyOTP(pin);
+                _verifyOTP(pin,widget.body);
               },
               onChanged: (value) {
                 debugPrint('onChanged: $value');
@@ -682,14 +689,14 @@ class _RoundedWithCustomCursorState extends State<RoundedWithCustomCursor> {
       ),
     );
   }
-  _verifyOTP(String otp) async {
+  _verifyOTP(String otp, body1) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var body = {
       "phone": "${widget.phone}",
       "code":otp.toString(),
     };
 
-    var response = await http.post(Uri.parse('https://api.mapmycrop.store/auth/verify_otp'),
+    var response = await http.post(Uri.parse('https://api.mapmycrop.com/auth/verify_otp'),
       headers: {
         "Content-Type" : "application/json"
       },
@@ -697,26 +704,47 @@ class _RoundedWithCustomCursorState extends State<RoundedWithCustomCursor> {
     );
     var data = jsonDecode(response.body);
     print(data);
+    print(body1);
     // prefs.setString('', value)
-    if(response.statusCode==200 ||response.statusCode==201 ){
-      QuickAlert.show(
-          context: context,
-          type: QuickAlertType.success,
-          text: 'Phone Number has been Verified Successfully!',
-          confirmBtnText:'Ok',
-          onConfirmBtnTap:(){
-            prefs.setString('api_key', data['apikey']);
-            prefs.setString('email', data['email']??'');
-            prefs.setString('ph', data['phone']);
-            prefs.setBool('_isLoggedIn', true);
-            Navigator.pop(context);
-            Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                    builder: (BuildContext context) =>
-                        DashboardActivity()));
-          }
+    if(response.statusCode==200 ||response.statusCode==201 ) {
+      var response1 = await
+      http.post(Uri.parse('https://api.mapmycrop.com/auth/register'),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: jsonEncode(body1),
       );
+      print(response1.statusCode);
+      print(response1.body);
+      data = jsonDecode(response1.body);
+      // prefs.setString('', value)
+      if (response1.statusCode == 200 || response1.statusCode == 201) {
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.success,
+            text: 'Phone Number has been Verified Successfully!',
+            confirmBtnText: 'Ok',
+            onConfirmBtnTap: () {
+              prefs.setString('api_key', data['apikey']);
+              prefs.setString('email', data['email'] ?? '');
+              prefs.setString('ph', data['phone']);
+              prefs.setBool('_isLoggedIn', true);
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) =>
+                          DashboardActivity()));
+            }
+        );
+      }else{
+        QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: '${data['detail']}',//'Something went wrong,Please verify details!',
+        );
+      }
     }else{
       QuickAlert.show(
         context: context,

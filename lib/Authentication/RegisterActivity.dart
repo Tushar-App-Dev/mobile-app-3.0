@@ -352,11 +352,11 @@ class _RegisterActivityState extends State<RegisterActivity> {
             children: [
               GestureDetector(
                 onTap: () {
-                  //_sendToServer();
-                  Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));//VerifyOTPActivity(ccode:ccode,phone:Phone)));
+                  _sendToServer();
+                  // Navigator.pushReplacement(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));//VerifyOTPActivity(ccode:ccode,phone:Phone)));
                 },
                 child: Container(
                     width: 319,
@@ -445,6 +445,7 @@ class _RegisterActivityState extends State<RegisterActivity> {
 
   _datareciver(String username, String pwd,String email,String phone, String ccode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    print('contry code is $ccode');
     var data,datavalue;
     var body;
     if(email.isNotEmpty) {
@@ -452,6 +453,7 @@ class _RegisterActivityState extends State<RegisterActivity> {
         "email": "$email",
         "ph": "$phone",
         "country_code": "$ccode",
+         "terms": true,
         "company_id": 1,
         "password": "$pwd"
       };
@@ -460,73 +462,79 @@ class _RegisterActivityState extends State<RegisterActivity> {
         //"email": "$email",
         "ph": "$phone",
         "country_code": "$ccode",
+         "terms": true,
         "company_id": 1,
         "password": "$pwd"
       };
     }
+    print(body);
+    Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone,body:body)));
 
-    var response1 = await
-    http.post(Uri.parse('https://api.mapmycrop.store/auth/register'),
-      headers: {
-        "Content-Type" : "application/json"
-      },
-      body: jsonEncode(body),
-    );
-    print(response1.statusCode);
-    print(response1.body);
-    data = jsonDecode(response1.body);
-    // prefs.setString('', value)
-    if(response1.statusCode==200 ||response1.statusCode==201){
-      Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-              builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));
-      // QuickAlert.show(
-      //     context: context,
-      //     type: QuickAlertType.success,
-      //     text: 'Your account has been created Successfully!',
-      //     confirmBtnText:'Ok',
-      //     onConfirmBtnTap:(){
-      //       // prefs.setString('api_key', data['apikey']);
-      //       // prefs.setString('email', data['email']);
-      //       // prefs.setString('ph', data['ph']);
-      //       // prefs.setBool('_isLoggedIn', true);
-      //       Navigator.pop(context);
-      //       Navigator.pushReplacement(
-      //           context,
-      //           MaterialPageRoute(
-      //               builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));//const DashboardActivity()));//
-      //     }
-      // );
-    }else{
-      // showDialog(
-      //     context: context,
-      //     builder: (BuildContext context) {
-      //       return AlertDialog(
-      //         backgroundColor: Colors.red[100],
-      //         title: Text("Please Verify"),
-      //         content: Text(
-      //             "VERIFY|\n Please Enter Valid Credentials"),
-      //         actions: <Widget>[
-      //           IconButton(
-      //               icon: Icon(Icons.check),
-      //               onPressed: () {
-      //                 /* Navigator.pushReplacement(
-      //                     context,
-      //                     MaterialPageRoute(
-      //                         builder: (BuildContext context) => VerifyOTPActivity(username: user)));*/
-      //                 Navigator.pop(context);
-      //               })
-      //         ],
-      //       );
-      //     });
-      QuickAlert.show(
-        context: context,
-        type: QuickAlertType.error,
-        title: 'Oops...',
-        text: await changeLanguage('${data['detail']}')//'Something went wrong,Please verify details!',
-      );
-    }
+    // var response1 = await
+    // http.post(Uri.parse('https://api.mapmycrop.com/auth/register'),
+    //   headers: {
+    //     "Content-Type" : "application/json"
+    //   },
+    //   body: jsonEncode(body),
+    // );
+    // print(response1.statusCode);
+    // print(response1.body);
+    // data = jsonDecode(response1.body);
+    // // prefs.setString('', value)
+    // if(response1.statusCode==200 ||response1.statusCode==201){
+    //   Navigator.pushReplacement(
+    //       context,
+    //       MaterialPageRoute(
+    //           builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));
+    //   // QuickAlert.show(
+    //   //     context: context,
+    //   //     type: QuickAlertType.success,
+    //   //     text: 'Your account has been created Successfully!',
+    //   //     confirmBtnText:'Ok',
+    //   //     onConfirmBtnTap:(){
+    //   //       // prefs.setString('api_key', data['apikey']);
+    //   //       // prefs.setString('email', data['email']);
+    //   //       // prefs.setString('ph', data['ph']);
+    //   //       // prefs.setBool('_isLoggedIn', true);
+    //   //       Navigator.pop(context);
+    //   //       Navigator.pushReplacement(
+    //   //           context,
+    //   //           MaterialPageRoute(
+    //   //               builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));//const DashboardActivity()));//
+    //   //     }
+    //   // );
+    // }else{
+    //   // showDialog(
+    //   //     context: context,
+    //   //     builder: (BuildContext context) {
+    //   //       return AlertDialog(
+    //   //         backgroundColor: Colors.red[100],
+    //   //         title: Text("Please Verify"),
+    //   //         content: Text(
+    //   //             "VERIFY|\n Please Enter Valid Credentials"),
+    //   //         actions: <Widget>[
+    //   //           IconButton(
+    //   //               icon: Icon(Icons.check),
+    //   //               onPressed: () {
+    //   //                 /* Navigator.pushReplacement(
+    //   //                     context,
+    //   //                     MaterialPageRoute(
+    //   //                         builder: (BuildContext context) => VerifyOTPActivity(username: user)));*/
+    //   //                 Navigator.pop(context);
+    //   //               })
+    //   //         ],
+    //   //       );
+    //   //     });
+    //   QuickAlert.show(
+    //     context: context,
+    //     type: QuickAlertType.error,
+    //     title: 'Oops...',
+    //     text: await changeLanguage('${data['detail']}')//'Something went wrong,Please verify details!',
+    //   );
+    // }
   }
 
   DateTime currentBackPressTime;

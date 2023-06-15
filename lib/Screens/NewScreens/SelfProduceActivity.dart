@@ -87,9 +87,9 @@ class _SelfProduceState extends State<SelfProduce> {
     api_key = prefs.getString('api_key');
     // varietyHint = await changeLanguage("Variety of Product");
     // varietyRequired = await changeLanguage('Variety is Required');
-    // var response = await http.get(Uri.parse("https://api.mapmycrop.store/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
+    // var response = await http.get(Uri.parse("https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
     var response = await http
-        .get(Uri.parse("https://api.mapmycrop.store/crop/?api_key=$api_key"));
+        .get(Uri.parse("https://api.mapmycrop.com/crop/?api_key=$api_key"));
     var cropData = jsonDecode(response.body);
     print(cropData);
     for (int i = 0; i < cropData.length; i++) {

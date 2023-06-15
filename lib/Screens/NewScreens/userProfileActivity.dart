@@ -47,7 +47,7 @@
 //     //setState(() {
 //     var api_key = await prefs.getString('api_key');
 //     uid = prefs.getString('userID');
-//     var response1 = await http.get(Uri.parse('https://api.mapmycrop.store/profile/?api_key=$api_key'));
+//     var response1 = await http.get(Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
 //     print("profileData response StatusCode is ${response1.statusCode}\n and Response body is ${response1.body}  "  );
 //     profileData = jsonDecode(response1.body);
 //     print("phone = ${profileData['phone']}\n email = ${profileData['email']}\n api_key = ${profileData['api_key']}");
@@ -658,7 +658,7 @@ import 'TermsAndConditionActivity.dart';
 //     //setState(() {
 //     var api_key = await prefs.getString('api_key');
 //     uid = prefs.getString('userID');
-//     var response1 = await http.get(Uri.parse('https://api.mapmycrop.store/profile/?api_key=$api_key'));
+//     var response1 = await http.get(Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
 //     print("profileData response StatusCode is ${response1.statusCode}\n and Response body is ${response1.body}  "  );
 //     profileData = jsonDecode(response1.body);
 //     print("phone = ${profileData['phone']}\n email = ${profileData['email']}\n api_key = ${profileData['api_key']}");
@@ -1166,7 +1166,7 @@ class _userProfileActivityState extends State<userProfileActivity> {
     //setState(() {
     var api_key = await prefs.getString('api_key');
     var response1 = await http.get(
-        Uri.parse('https://api.mapmycrop.store/profile/?api_key=$api_key'));
+        Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
     print(
         "profileData response StatusCode is ${response1.statusCode}\n and Response body is ${response1.body}  ");
     profileData = jsonDecode(response1.body);

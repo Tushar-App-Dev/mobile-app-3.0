@@ -17,6 +17,7 @@ class MmcCard extends StatefulWidget {
 
 class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
   var height1 = 100.0;
+  var height2 = 100.0;
   bool isVisible = false;
   int turns = 0;
   var showCoords = false;
@@ -75,7 +76,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
 
   }
   getTemperature() async{
-    //var response = await http.get(Uri.parse(''))
+    var response = await http.get(Uri.parse(''));
   }
   expandContainer(){
     if(height1==50.0){
@@ -496,7 +497,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                                       });
                                       if(height1==100.0){
                                         setState(() {
-                                          height1 = 300;
+                                          height1 = (height(context)*0.24*(12/3));
                                           turns = 2;
                                         });
                                       }else{
@@ -513,314 +514,107 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                             ),
                           )
                         ],
-                      ),height1==300?Card(
-                        elevation: 10,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                               //color:Colors.red,
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
-                                        ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
+                      ),height1==(height(context)*0.24*(12/3))?Container(
+                          height: height1-100,
+                          child: GridView.builder(
+                              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3,childAspectRatio: 0.75),
+                              physics: NeverScrollableScrollPhysics(),
+
+                              // scrollDirection: Axis.horizontal,
+                              itemCount: 12,
+                              itemBuilder: (context,index)=>Container(
+                                  margin:EdgeInsets.symmetric(horizontal: 10),
+                                  child: Stack(
+                                      alignment: Alignment.center,
+                                      children: [
+                                        Column(
+                                          children: [//F6D9A7
+                                            SizedBox(
+                                              height: MediaQuery.of(context).size.height*0.035,
+                                            ),
+                                            Container(
+                                              padding: EdgeInsets.all(1),
+                                              decoration: BoxDecoration(
+                                                borderRadius: BorderRadius.circular(15),
+                                                gradient: LinearGradient(
+                                                    begin: Alignment.topCenter,
+                                                    end: Alignment.bottomCenter,
+                                                    colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
+                                                ),
                                               ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
-                                                ],
-                                              ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
+                                              child: Container(
+                                                height:MediaQuery.of(context).size.height*0.16,
+                                                width: MediaQuery.of(context).size.width*0.3,
                                                 decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
+                                                    color: Colors.white,
+                                                    borderRadius: BorderRadius.circular(15),
+                                                    border: Border.all(
+                                                      color: Color(0xffF6D9A7),
+                                                      //width: 2
                                                     ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
+                                                    boxShadow: [
+                                                      BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
+                                                    ]
+                                                ),
+                                                child: Column(
+                                                  children: [
+                                                    SizedBox(height: MediaQuery.of(context).size.height*0.05,),
+                                                    Text('Generic Farm\nScore',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600),textAlign: TextAlign.center,),
+                                                    Expanded(child: SizedBox(),),
+                                                    Container(
+                                                      height: MediaQuery.of(context).size.height*0.06,
+                                                      decoration: BoxDecoration(
+                                                          color: Color(0xffF6D9A7),
+                                                          borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
+                                                      ),
+                                                      child: Center(
+                                                        child: Text(
+                                                          "09/10",
+                                                          style: TextStyle(
+                                                              color: Color(0xff0D0D0D),
+                                                              fontSize: 12,
+                                                              fontWeight: FontWeight.w600
+                                                          ),
+                                                          textAlign: TextAlign.center,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
+                                            ),
 
                                           ],
                                         ),
-                                      ))
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
-                                        ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
-                                                ],
-                                              ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
+                                        Positioned(
+                                            top: 0,
+                                            child: Container(
+                                                height: MediaQuery.of(context).size.height*0.075,
+                                                width: MediaQuery.of(context).size.height*0.075,
+                                                padding: EdgeInsets.all(10),
                                                 decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
+                                                    color: Colors.white,
+                                                    borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
+                                                    boxShadow: [
+                                                      BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(45))
+                                                    ]
                                                 ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
-
-                                          ],
-                                        ),
-                                      ))
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
-                                        ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
-                                                ],
-                                              ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
-                                                decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
-
-                                          ],
-                                        ),
-                                      ))
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                                                child: SvgPicture.asset('assets/svgImages/${index+1}.svg',
+                                                  // height: MediaQuery.of(context).size.height*0.04,
+                                                  // width: MediaQuery.of(context).size.height*0.04,
+                                                  // fit: BoxFit.fill,
+                                                )
+                                            ))
+                                      ]
+                                  )
+                              )
+                          )
                       ):Container(),
                                          ],
                   ),
                 ),
 
-                Container(
+                /*Container(
                   height: height(context)*0.5,
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3,childAspectRatio: 0.75),
@@ -914,7 +708,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                       )
                     )
                   )
-                ),
+                ),*/
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -1052,7 +846,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                               Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Image.asset('assets/svgImages/Soil1.png',fit: BoxFit.fill,),
+                                  Image.asset('assets/svgImages/Temperature.png',fit: BoxFit.fill,),
                                   Column(
                                     children: [
                                       SizedBox(height: height(context)*0.043),
@@ -1063,7 +857,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                                           Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
                                         ],
                                       ),
-                                      SizedBox(height: height(context)*0.009),
+                                      SizedBox(height: height(context)*0.075),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
@@ -1071,7 +865,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                                           Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
                                         ],
                                       ),
-                                      SizedBox(height: height(context)*0.009),
+                                      SizedBox(height: height(context)*0.085),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
@@ -1079,30 +873,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                                           Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
                                         ],
                                       ),
-                                      SizedBox(height: height(context)*0.015),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          Text('   00 cm > ',style: TextStyle(fontSize: 10,fontWeight:FontWeight.w600,color:Color(0xff0d0d0d))),
-                                          Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
-                                        ],
-                                      ),
-                                      SizedBox(height: height(context)*0.025),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          Text('   00 cm > ',style: TextStyle(fontSize: 10,fontWeight:FontWeight.w600,color:Color(0xff0d0d0d))),
-                                          Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
-                                        ],
-                                      ),
-                                      SizedBox(height: height(context)*0.04),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          Text('   00 cm > ',style: TextStyle(fontSize: 10,fontWeight:FontWeight.w600,color:Color(0xff0d0d0d))),
-                                          Text('  0.462 m3m3',style: TextStyle(fontSize: 12,fontWeight:FontWeight.w600,color:Color(0xff684624)))
-                                        ],
-                                      ),
+
                                     ],
                                   )
 
@@ -1122,7 +893,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                     color: Colors.white,
                   ),
 
-                  height: height1,
+                  height: height2!=100?height2+100:height2,
                   duration: Duration(seconds: 1),
                   child:Column(
                     children: [
@@ -1132,9 +903,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                           GestureDetector(
                               onTap: (){
 
-                                setState((){
-                                  isVisible = false;
-                                });
+
 
                               },
                               child: ClipRRect(borderRadius: BorderRadius.circular(15), child: Image.asset('assets/images/soilMoisture.jpg',height: 100,width: 100,fit: BoxFit.fill))),
@@ -1154,14 +923,14 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                                       setState((){
                                         isVisible = !isVisible;
                                       });
-                                      if(height1==100.0){
+                                      if(height2==100){
                                         setState(() {
-                                          height1 = 300;
+                                          height2 = height(context)*0.33*12;
                                           turns = 2;
                                         });
                                       }else{
                                         setState(() {
-                                          height1 = 100;
+                                          height2 = 100;
                                           turns = 0;
                                         });
                                       }
@@ -1173,314 +942,120 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
                             ),
                           )
                         ],
-                      ),height1==300?Card(
-                        elevation: 10,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              //color:Colors.red,
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
+                      ),height2!=100?Container(
+                        height:height2,
+                        child: ListView.builder(
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: 12,
+                            itemBuilder: (context,index)=>Container(
+                          height: height(context)*0.33,
+                          width: width(context)*0.9,
+                          //padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15),
+                            // color: Colors.white
+                          ),
+                          child: Stack(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.only(top:10.0),
+                                child: Column(
+                                  //mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Container(
+                                      height: height(context)*0.08,
+
+                                      decoration: BoxDecoration(
+                                        color: Color(0xffF6D9A7),
+                                        borderRadius: BorderRadius.only(topRight: Radius.circular(15),topLeft: Radius.circular(15)),
                                       ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
+                                      child: Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(20.0),
+                                          child: Text('Ideal temperature for planting warm season plants',style: TextStyle(fontSize: 16,fontWeight: FontWeight.w600),textAlign: TextAlign.center,),
                                         ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
+                                      ),
+                                    ),
+                                    Container(
+                                      decoration:BoxDecoration(
+                                        borderRadius: BorderRadius.only(bottomRight: Radius.circular(15),bottomLeft: Radius.circular(15)),
+                                        color: Colors.white,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.all(20.0),
+                                            child: Text('Warm season plants such as cotton, sugarcane and rice germinate best in temperature between 210c to 300c (70F to 86F)',style: TextStyle(fontWeight:FontWeight.w600),textAlign: TextAlign.justify,),
                                           ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
+                                          Card(
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.only(bottomRight: Radius.circular(15),bottomLeft: Radius.circular(15))),
+                                            //elevation: 2,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(15.0),
+                                              child: Row(
                                                 children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
+                                                  Container(
+                                                    height: 6,
+                                                    width: 6,
+                                                    margin: EdgeInsets.only(right: 10),
+                                                    decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(3),
+                                                        color: Colors.green
+                                                    ),
+
+                                                  ),
+                                                  Text('Last update\n09:50 AM',style: TextStyle(fontSize: 10),textAlign: TextAlign.center,),
+                                                  Expanded(
+                                                    child: SizedBox(),
+                                                  ),
+                                                  Container(
+                                                    height: height(context)*0.05,
+                                                    width: width(context)*0.38,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(height(context)*0.04),
+                                                      border: Border.all(color: Colors.green),
+                                                      // color: Colors.green
+                                                    ),
+                                                    child: Center(child: Text('Refresh',style: TextStyle(color: Colors.green,fontSize: 12),),),
+                                                  )
                                                 ],
                                               ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
-                                                decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
+                                            ),
+                                          )
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
 
-                                          ],
-                                        ),
-                                      ))
-                                ],
+                                    )
+
+                                  ],
+                                ),
                               ),
-                            ),
-                            Container(
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
-                                        ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
-                                                ],
-                                              ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
-                                                decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                              Positioned(
+                                right: width(context)*0.08,
+                                top:0,
+                                child: Container(
+                                    padding: EdgeInsets.only(bottom: 4),
+                                    height: 23,
+                                    width: 23,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(13),
+                                      border: Border.all(color: Color(0xff0d0d0d),width: 2),
+                                      // color: Color(0xff66cb65),
+                                      color: Color(0xffff56f5f),
+                                    ),
+                                    child: Center(child: Text('!',style:TextStyle(color: Color(0xff0d0d0d),fontSize: 16,fontWeight: FontWeight.bold)))),
+                              )
 
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
-
-                                          ],
-                                        ),
-                                      ))
-                                ],
-                              ),
-                            ),
-                            Container(
-                              margin:EdgeInsets.symmetric(horizontal: 10),
-                              child: Stack(
-                                alignment: Alignment.center,
-                                children: [
-                                  Column(
-                                    children: [//F6D9A7
-                                      SizedBox(
-                                        height: MediaQuery.of(context).size.height*0.035,
-                                      ),
-                                      Container(
-                                        padding: EdgeInsets.all(1),
-                                        decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(15),
-                                          gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [Color(0xffF6D9A7), Color(0xffF6D9A7).withOpacity(0.1)]
-                                          ),
-                                        ),
-                                        child: Container(
-                                          height:MediaQuery.of(context).size.height*0.15,
-                                          width: MediaQuery.of(context).size.width*0.25,
-                                          decoration: BoxDecoration(
-                                              color: Colors.white,
-                                              borderRadius: BorderRadius.circular(15),
-                                              border: Border.all(
-                                                color: Color(0xffF6D9A7),
-                                                //width: 2
-                                              ),
-                                              boxShadow: [
-                                                BoxShadow(spreadRadius: 6,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(30))
-                                              ]
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              SizedBox(height: MediaQuery.of(context).size.height*0.05,),
-                                              Row(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.cloud_queue,color: Colors.orange,),
-                                                  SizedBox(width: 5,),
-                                                  Text('64.73',style: TextStyle(
-                                                      fontSize: 16,color: Colors.orange
-                                                  ),)
-                                                ],
-                                              ),
-                                              Expanded(child: SizedBox(),),
-                                              Container(
-                                                height: MediaQuery.of(context).size.height*0.06,
-                                                decoration: BoxDecoration(
-                                                    color: Color(0xffF6D9A7),
-                                                    borderRadius: BorderRadius.only(bottomLeft: Radius.circular(10),bottomRight: Radius.circular(10))
-                                                ),
-                                                child: Center(
-                                                  child: Text(
-                                                    "May 25\n 2023",
-                                                    style: TextStyle(
-                                                        color: Color(0xff0D0D0D),
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w400
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-
-                                    ],
-                                  ),
-                                  Positioned(
-                                      top: 0,
-                                      child: Container(
-                                        height: MediaQuery.of(context).size.height*0.075,
-                                        width: MediaQuery.of(context).size.height*0.075,
-                                        decoration: BoxDecoration(
-                                            color: Colors.white,
-                                            borderRadius: BorderRadius.circular(MediaQuery.of(context).size.height*0.05),
-                                            boxShadow: [
-                                              BoxShadow(spreadRadius: 5,blurRadius: 12,color: Color(0xff7C7C7C).withAlpha(25))
-                                            ]
-                                        ),
-                                        child:Column(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Icon(Icons.satellite_alt_outlined,color: Color(0xff7C7C7C),size: 18,),
-                                            SizedBox(height: 5,),
-                                            Text('S3',style: TextStyle(fontSize: 12,color: Color(0xff7C7C7C)),)
-
-                                          ],
-                                        ),
-                                      ))
-                                ],
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
+                        )
                         ),
                       ):Container(),
                     ],
                   ),
                 ),
 
-                Container(
+               /* Container(
                   height: height(context)*0.3,
                   width: width(context)*0.9,
                   //padding: EdgeInsets.all(20),
@@ -1577,7 +1152,7 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
 
                     ],
                   ),
-                ),
+                ),*/
 
               ],
             ),

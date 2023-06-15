@@ -308,7 +308,7 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
     var responseValue = '';
 
     var request = http.MultipartRequest('POST', Uri.parse(
-        'https://api.mapmycrop.store/upload/?api_key=$api_key'));
+        'https://api.mapmycrop.com/upload/?api_key=$api_key'));
 
     request.files.add(await http.MultipartFile.fromPath('file', image.path, contentType: MediaType("image", 'png')));
     var response = await request.send();
@@ -366,7 +366,7 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
       "comments": comments,
       "attachment": attachment.replaceAll("\"", "")
     };
-    var response = await http.post(Uri.parse('https://api.mapmycrop.store/scouting/?api_key=$api_key'),headers: {
+    var response = await http.post(Uri.parse('https://api.mapmycrop.com/scouting/?api_key=$api_key'),headers: {
       'accept': "application/json",
       'Content-Type': "application/json"
     },body: jsonEncode(body));

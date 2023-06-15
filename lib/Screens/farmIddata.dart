@@ -119,7 +119,7 @@ class _FarmIdScreenState extends State<FarmIdScreen> {
                               Navigator.pop(context);
                             },
                               onConfirmBtnTap: () async {
-                          var res = await http.delete(Uri.parse('https://api.mapmycrop.store/farm/${idList[index]}?api_key=$api_key'));
+                          var res = await http.delete(Uri.parse('https://api.mapmycrop.com/farm/${idList[index]}?api_key=$api_key'));
                           if(res.statusCode==200){
                             QuickAlert.show(
                               context: context,
@@ -127,7 +127,7 @@ class _FarmIdScreenState extends State<FarmIdScreen> {
                               text: 'Transaction Completed Successfully!',
                             );
                             setState(() {
-                              //http.delete(Uri.parse('https://api.mapmycrop.store/farm/33625bb0963543f996268d3fb83af221?api_key=b5106a58380e4ccaba945bffed0998fd')),
+                              //http.delete(Uri.parse('https://api.mapmycrop.com/farm/33625bb0963543f996268d3fb83af221?api_key=b5106a58380e4ccaba945bffed0998fd')),
                               idList.removeAt(index);
                               nameList.removeAt(index);}
                             );

@@ -38,7 +38,7 @@ class _EditProfileActivityState extends State<EditProfileActivity> {
   }
 getProfileData()async{
   var profileData;
-    var response1 = await http.get(Uri.parse('https://api.mapmycrop.store/profile/?api_key=5b19f321edd44126aee30172874c5c93'));
+    var response1 = await http.get(Uri.parse('https://api.mapmycrop.com/profile/?api_key=5b19f321edd44126aee30172874c5c93'));
 
   print("profileData response StatusCode is ${response1.statusCode}\n and Response body is ${response1.body}  "  );
   profileData = jsonDecode(response1.body);
@@ -276,7 +276,7 @@ getProfileData()async{
                   "email":Email,
                   "ph": 'phone'
                 };
-                var response = await http.put(Uri.parse("https://api.mapmycrop.store/profile/?api_key=5b19f321edd44126aee30172874c5c93"),);
+                var response = await http.put(Uri.parse("https://api.mapmycrop.com/profile/?api_key=5b19f321edd44126aee30172874c5c93"),);
               },
               child: Container(
                 width: width(context)*0.35,

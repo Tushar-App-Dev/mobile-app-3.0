@@ -7,6 +7,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_app_review/in_app_review.dart';
 import 'package:mmc_master/Screens/NewScreens/ExpertCall.dart';
+import 'package:mmc_master/Screens/NewScreens/newDashBoard.dart';
 import 'package:mmc_master/Screens/NewScreens/userProfileActivity.dart';
 import 'package:mmc_master/Screens/NewScreens/weatherDetail.dart';
 import 'package:nb_utils/nb_utils.dart';
@@ -233,7 +234,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
     _isinstructions=prefs.getBool("instructions");
     print('api key is   $api_key');
     var response = await http
-        .get(Uri.parse('https://api.mapmycrop.store/farm/?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     data = jsonDecode(response.body);
 
     setState(() {
@@ -250,7 +251,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
     //print(farmnames);
 
     var response1 = await http.get(
-        Uri.parse('https://api.mapmycrop.store/profile/?api_key=$api_key'));
+        Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
     profileData = jsonDecode(response1.body);
     setState(() {
       email = profileData['email'];
@@ -2633,7 +2634,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
             ),
           ).onTap(() {
             // showNotification();
-            Navigator.push((context), MaterialPageRoute(builder: (context)=>MmcCard()));
+             Navigator.push((context), MaterialPageRoute(builder: (context)=>NewDashBoard()));
             // Navigator.of(context).push(
             //     MaterialPageRoute(builder: (_) => OverlayImagePage()));
           }),
@@ -2641,6 +2642,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
             height: 70,
             width: 70,
             alignment: Alignment.center,
+
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(width: 2, color: Colors.orange),
@@ -2771,7 +2773,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       children: [
                         Icon(Icons.message),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Masseges'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
+                        FutureBuilder(future:changeLanguage('Messages'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
                             baseColor: Colors.grey.shade300,
                             highlightColor: Colors.white,child: Card(
                           child: SizedBox(

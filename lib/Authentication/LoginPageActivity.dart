@@ -539,7 +539,7 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
       isLoading = true;
     });
 
-    var response = await http.post(Uri.parse("https://api.mapmycrop.store/auth/login"),headers: {
+    var response = await http.post(Uri.parse("https://api.mapmycrop.com/auth/login"),headers: {
       "Content-Type": "application/x-www-form-urlencoded",
       "accept": "application/json"
     },body: body);

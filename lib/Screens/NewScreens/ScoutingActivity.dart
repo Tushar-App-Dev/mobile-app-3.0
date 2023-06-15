@@ -118,7 +118,7 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
     var api_key= prefs.getString('api_key');
 
     var response = await http.get(Uri.parse(
-        'https://api.mapmycrop.store/scouting/$farmId?api_key=$api_key'));
+        'https://api.mapmycrop.com/scouting/$farmId?api_key=$api_key'));
     //print(response.body);
     data = await jsonDecode(response.body);
     // var point = jsonDecode(data[0]["geometry"]);
@@ -220,7 +220,7 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
     _polygons.clear();
     cords.clear();
     var response = await http.get(Uri.parse(
-        'https://api.mapmycrop.store/farm/$farmId?api_key=$api_key'));
+        'https://api.mapmycrop.com/farm/$farmId?api_key=$api_key'));
     //print(response.body);
       var data = jsonDecode(response.body);
       //eventList = data;
@@ -370,8 +370,10 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
   Widget build(BuildContext context) {
 
     final GoogleMap googleMap = GoogleMap(
+      zoomControlsEnabled: true,
+      zoomGesturesEnabled: true,
       padding: EdgeInsets.only(bottom: 60, top: 80),
-      myLocationButtonEnabled: false,
+      myLocationButtonEnabled: true,
       myLocationEnabled: true,
       onMapCreated: onMapCreated,
       initialCameraPosition: _position,
