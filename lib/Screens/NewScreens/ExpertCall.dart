@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
+import 'package:mmc_master/Screens/NewScreens/weatherDetail.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -109,6 +111,54 @@ class _ExpertCallState extends State<ExpertCall> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: false,
+        backgroundColor: Color(0xffECB34F),
+        title: languageText(
+        "Schedule a call",
+           TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontFamily: "Inter",
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: InkWell(
+            onTap: () async {
+               Navigator.pop(context);
+             // print("Tusharhi".substring('Tusharhi'.length-2,'Tusharhi'.length));
+             /* SharedPreferences prefs = await SharedPreferences.getInstance();
+
+
+              CollectionReference DeletedAccounts = FirebaseFirestore.instance.collection('Deleted_Accounts');
+              DeletedAccounts.doc(prefs.getString("api_key")).set({
+                "User_Id" : 9898980909.toString(),
+              }).then((value){
+                print('successs');
+
+              });
+
+
+             var result = await DeletedAccounts.doc(prefs.getString('api_key')).get();
+             print(result.data());
+             if(result.data()==null){
+               print('good to go');
+             }else{
+               print('account has been deleted');
+             }
+              CollectionReference sellProduce =
+              FirebaseFirestore.instance.collection('Sell_Produce');
+             var sellData = await sellProduce.get();
+             print(sellData.docs);*/
+              //
+              // DateTime currentTime = DateTime.now();
+              // String stringTime = currentTime.toString();
+              // print(stringTime.substring(0,stringTime.length-7));
+
+            },
+            child: Image.asset('assets/new_images/back.png')
+        ),
+      ),
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey.shade50,//Color(0XFFECB34F),
       body: Form(
@@ -119,14 +169,13 @@ class _ExpertCallState extends State<ExpertCall> {
   }
 
   Widget formUI() {
-    var scrWidth = width(context);
-    var scrHeight = height(context);
+
     return Stack(
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height:height(context)*0.12,),
+            SizedBox(height:height(context)*0.04,),
             // Align(
             //   alignment: Alignment.centerLeft,
             //   child: Padding(
@@ -143,7 +192,7 @@ class _ExpertCallState extends State<ExpertCall> {
             //     //
             //   ),
             // ),
-            Align(
+           /* Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(left: 42, top: 5),
@@ -157,7 +206,7 @@ class _ExpertCallState extends State<ExpertCall> {
                   ),
                 ),
               ),
-            ),
+            ),*/
             SizedBox(
               height: 40,
             ),
@@ -541,7 +590,7 @@ class _ExpertCallState extends State<ExpertCall> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
-                        fontFamily: "Open Sans",
+                        // fontFamily: "Open Sans",
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -602,7 +651,7 @@ class _ExpertCallState extends State<ExpertCall> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
-                        fontFamily: "Open Sans",
+                        // fontFamily: "Open Sans",
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -612,6 +661,7 @@ class _ExpertCallState extends State<ExpertCall> {
             ]),
           ],
         ),
+
         // ClipPath(
         //   clipper: InnerClippedPart(),
         //   child: Container(
@@ -692,7 +742,7 @@ class _ExpertCallState extends State<ExpertCall> {
       "type_of_expert": expert
     });
     var response = await http.post(
-        Uri.parse('http://api.mapmycrop.store/schedule_call/?api_key=$api_key'),
+        Uri.parse('https://api.mapmycrop.com/schedule_call/?api_key=$api_key'),
         headers: {
           'accept': 'application/json',
           'Content-Type': "application/json"

@@ -25,7 +25,10 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
       mop='',
       dap='',
       ssp='';
-  var UREA,SSP,MOP,DAP;
+  var UREA=0,
+      SSP=0,
+      MOP=0,
+      DAP=0;
   List<String> croplist = ['Bean','Brinjal','Capsicum & Chilli','Black & Green Gram',
     'Cabbage','Cotton','Cucumber','Ginger','Rice','Sugarcane','Turmeric','Chickpea & Gram','Maize','Melon','Millet','Okra','Onion','Peanut','Pigeon','Pea & Red',
         'Potato','Sorghum','Soyabean','Tomato', 'Wheat'];
@@ -51,29 +54,44 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
       response.stream.transform(utf8.decoder).listen((value) async {
         data = jsonDecode(value);
         print(data);
-        setState(() {
-          for (int i = 0; i < data.length; i++) {
-            crop = data[i]["CROP"];
-            urea = data[i]["UREA"];
-            ssp = data[i]["SSP"];
-            mop = data[i]["MOP"];
-            dap = data[i]["DAP"];
+        do{
+          await Future.delayed(Duration(milliseconds: 1));
+          setState(()  {
+            // for (int i = 0; i < data.length; i++) {
+            // do {
+            //   await Future.delayed(Duration(milliseconds: 1));
+            // } while (finalResult == null);
+            crop = data[0]["CROP"];
+            urea = data[0]["UREA"];
+            ssp = data[0]["SSP"];
+            mop = data[0]["MOP"];
+            dap = data[0]["DAP"];
             print(crop);
             print(urea);
-          }
-        });
+            // }
+          });
+        }while((urea==null||urea =='')||(ssp==null||ssp=='')||(mop==null||mop=='')||(dap==null||dap==""));
+
       });
     }
   }
 
-  void calculateFertilizer(){
-    setState(() {
-      UREA=int.parse(urea)*quantity;
-      SSP=int.parse(ssp)*quantity;
-      MOP=int.parse(mop)*quantity;
-      DAP=int.parse(dap)*quantity;
-      // print(UREA);
-    });
+  Future<void> calculateFertilizer() async {
+    do{
+      await Future.delayed(Duration(milliseconds: 1));
+      print('the process repeated');
+      if(!((urea==null||urea =='')||(ssp==null||ssp=='')||(mop==null||mop=='')||(dap==null||dap==""))){
+        setState(() {
+          UREA=int.parse(urea)*quantity;
+          SSP=int.parse(ssp)*quantity;
+          MOP=int.parse(mop)*quantity;
+          DAP=int.parse(dap)*quantity;
+          // print(UREA);
+        });
+      }
+
+    }while((urea==null||urea =='')||(ssp==null||ssp=='')||(mop==null||mop=='')||(dap==null||dap==""));
+
   }
 
   void calculateAcreFertilizer(){
@@ -102,7 +120,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -128,7 +146,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                     child: FutureBuilder(future:changeLanguage("Select your Crop"),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(
                       color: Colors.black,
                       fontSize: 17,
-                      fontFamily: "Inter",
+                      /*fontFamily: "Inter"*/
                       fontWeight: FontWeight.w500,
                     ),):Shimmer.fromColors(
                         baseColor: Colors.grey.shade300,
@@ -207,7 +225,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                     child: FutureBuilder(future:changeLanguage("Select your Farm Size in Number"),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(
                       color: Colors.black,
                       fontSize: 17,
-                      fontFamily: "Inter",
+                      /*fontFamily: "Inter"*/
                       fontWeight: FontWeight.w500,
                     ),):Shimmer.fromColors(
                         baseColor: Colors.grey.shade300,
@@ -373,22 +391,39 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                             ),
                             SizedBox(height:30.0,),
                             GestureDetector(
-                              onTap: (){
+                              onTap: () async {
                                 if (cropDropDownValue != null) {
                                   // if(UREA!=null&&SSP!=null&&MOP!=null) {
                                   _isFormVisible = false;
                                   // _isDataUploaded = true;
                                   if(_radioSelected1==2){
                                     calculateFertilizer();
-                                  }
-                                  else{
-                                    setState(() {
+                                  } else{
+                                    do{
+                                      await Future.delayed(Duration(milliseconds: 1));
+                                      print('the process repeated');
+                                      if(!((urea==null||urea =='')||(ssp==null||ssp=='')||(mop==null||mop=='')||(dap==null||dap==""))){
+                                        setState(() {
+                                          UREA=int.parse(urea)*quantity;
+                                          SSP=int.parse(ssp)*quantity;
+                                          MOP=int.parse(mop)*quantity;
+                                          DAP=int.parse(dap)*quantity;
+                                          // print(UREA);
+                                        });
+                                      }
+
+                                    }while((urea==null||urea =='')||(ssp==null||ssp=='')||(mop==null||mop=='')||(dap==null||dap==""));
+                                    /*setState(() {
                                       double a=2.47105;
                                       UREA=(int.parse(urea)*quantity/a).round();
                                       SSP=(int.parse(ssp)*quantity/a).round();
                                       MOP=(int.parse(mop)*quantity/a).round();
                                       DAP=(int.parse(dap)*quantity/a).round();
-                                    });
+                                    });*/
+                                    print(UREA);
+                                    print(SSP);
+                                    print(MOP);
+                                    print(DAP);
                                   }
                                 }
                                 else {
@@ -398,8 +433,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                                             'Please select crop from Dropdown button'),
                                       ));
                                 }
-                                setState(() {
-                                });
+
                               },
                               child: Container(
                                 margin: EdgeInsets.symmetric(horizontal: 20.0,vertical:10),
@@ -416,7 +450,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                                     style: TextStyle(
                                       color: Colors.white,
                                       fontSize: 18,
-                                      fontFamily: "Inter",
+                                      /*fontFamily: "Inter"*/
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -442,7 +476,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                       child: Container(
                         width: double.infinity,
                         //height:height(context)*0.12,
-                        child: Stack(
+                        child: !(UREA==0&&SSP==0&&DAP==0&&MOP==0)?Stack(
                           children: [
                             Column(
                               // textDirection: TextDirection.rtl,
@@ -456,7 +490,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                                       style: TextStyle(
                                         color: Colors.black,
                                         fontSize: 17,
-                                        fontFamily: "Inter",
+                                        /*fontFamily: "Inter"*/
                                         fontWeight: FontWeight.w500,
                                       ),
                                     )
@@ -641,7 +675,7 @@ class _FertilizerCalculaterActivityState extends State<FertilizerCalculaterActiv
                               ],
                             ),
                           ],
-                        ),
+                        ):SizedBox(),
                       ),
                     ),
                   ],

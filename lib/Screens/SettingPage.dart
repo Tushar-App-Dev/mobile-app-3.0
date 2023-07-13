@@ -32,7 +32,7 @@ class _SettingState extends State<Setting> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -180,7 +180,7 @@ class _SettingState extends State<Setting> {
                 style: const TextStyle(
                   color: Color(0xcc000000),
                   fontSize: 17,
-                  fontFamily: "Inter",
+                  /*fontFamily: "Inter"*/
                   fontWeight: FontWeight.w600,
                 ),
               ),

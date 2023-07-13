@@ -47,7 +47,7 @@ class _AddCropDetailsState extends State<AddCropDetails> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -256,7 +256,7 @@ class _InstructionsState extends State<Instructions> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),

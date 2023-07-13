@@ -2,10 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:mmc_master/Authentication/LoginPageActivity.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../Screens/NewScreens/DashboardActivity.dart';
 import '../Screens/constant/Constant.dart';
 import '../constants/constants.dart';
@@ -24,7 +24,7 @@ class _RegisterActivityState extends State<RegisterActivity> {
   bool _validate = false;
   bool _acceptTerms = false;
   Color c = const Color.fromARGB(255, 11, 175, 40);
-  String username="",pwd="", Email="", Phone="", ccode;
+  String username = "", pwd = "", Email = "", Phone = "", ccode;
   final phoneController = TextEditingController();
   final pwdController = TextEditingController();
   bool _obscureText = true;
@@ -77,37 +77,37 @@ class _RegisterActivityState extends State<RegisterActivity> {
               onTap: () {
                 Navigator.pop(context);
               },
-              child: Image.asset('assets/new_images/back.png')
-          ),
+              child: Image.asset('assets/new_images/back.png')),
         ),
         SizedBox(
           height: height(context) * 0.03,
         ),
         Padding(
           padding: const EdgeInsets.only(left: 28.0),
-          child: ChangedLanguage(text:
-            "CREATE AN ACCOUNT",
+          child: ChangedLanguage(
+            text: "CREATE AN ACCOUNT",
             style: TextStyle(
               color: Colors.black,
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              fontFamily: "Inter",
+              /*fontFamily: "Inter"*/
             ),
             textAlign: TextAlign.left,
           ),
         ),
         SizedBox(height: 27.72),
         Padding(
-            padding: const EdgeInsets.only(left: 28.0),
-            child: ChangedLanguage(text:
-              "WELCOME",
+            padding: const EdgeInsets.only(left: 28.0, bottom: 25),
+            child: ChangedLanguage(
+              text: "WELCOME",
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 24,
-                fontFamily: "Inter",
+                /*fontFamily: "Inter"*/
                 fontWeight: FontWeight.w700,
               ),
             )),
+        /*
         Container(
           padding: EdgeInsets.only(top: 30, bottom: 10, left: 30, right: 30),
           child: TextFormField(
@@ -147,12 +147,14 @@ class _RegisterActivityState extends State<RegisterActivity> {
               username = value;
             },
           ),
-        ),
+        ),*/
         Container(
           padding: EdgeInsets.only(top: 10, bottom: 10, left: 30, right: 30),
           child: TextFormField(
             //validator: _validateEmail,
-            style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
+            style: new TextStyle(
+              color: Colors.black, /*fontFamily: "Inter"*/
+            ),
             keyboardType: TextInputType.text,
             decoration: InputDecoration(
               filled: true,
@@ -169,8 +171,10 @@ class _RegisterActivityState extends State<RegisterActivity> {
                   ? 'Email ID (Optional)'
                   : 'Email is optional',
               hintStyle: TextStyle(
-                  color: _emaivalidate == 1 ? Colors.black : Colors.red,
-                  fontFamily: "Inter"),
+                color: _emaivalidate == 1
+                    ? Colors.black
+                    : Colors.red, /*fontFamily: "Inter"*/
+              ),
               // labelText: 'Email ID / Phone Number',
               //floatingLabelBehavior: FloatingLabelBehavior.auto
             ),
@@ -203,20 +207,26 @@ class _RegisterActivityState extends State<RegisterActivity> {
         //    margin: EdgeInsets.symmetric(horizontal: 37,),
         //     child: Text('OR',style: new TextStyle(color: Colors.white,))),
         Container(
-          margin: EdgeInsets.symmetric(horizontal: 30,vertical: 5),
+          margin: EdgeInsets.symmetric(horizontal: 30, vertical: 5),
           //padding: EdgeInsets.only(top:5, bottom: 5, left: 30, right: 30),
           //color: Colors.white,
           decoration: BoxDecoration(
             color: Colors.white,
             //color: Colors.blueAccent,
-            border: Border.all(width: 1,color: Colors.black,),
+            border: Border.all(
+              width: 1,
+              color: Colors.black,
+            ),
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             child: IntlPhoneField(
+              phonevalidate: _phonevalidate,
               //validator: _validatePhone,
-              style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
+              style: new TextStyle(
+                color: Colors.black, /*fontFamily: "Inter"*/
+              ),
               keyboardType: TextInputType.phone,
               initialCountryCode: "IN",
               countryCodeTextColor: Colors.black,
@@ -232,9 +242,13 @@ class _RegisterActivityState extends State<RegisterActivity> {
                 enabledBorder: OutlineInputBorder(
                     borderSide: BorderSide(color: Colors.white),
                     borderRadius: BorderRadius.all(Radius.circular(10))),
-                hintText: _phonevalidate == 1 ?'Phone Number' : 'Number is Required',
-                hintStyle: TextStyle(color: _phonevalidate == 1 ? Colors.black : Colors.red,
-                    fontFamily: "Inter"),
+                hintText:
+                    _phonevalidate == 1 ? 'Phone Number' : 'Number is Required',
+                hintStyle: TextStyle(
+                  color: _phonevalidate == 1
+                      ? Colors.black
+                      : Colors.red, /*fontFamily: "Inter"*/
+                ),
                 // labelText: 'Phone Number',
               ),
               onChanged: (phone) {
@@ -287,7 +301,9 @@ class _RegisterActivityState extends State<RegisterActivity> {
           child: TextFormField(
             //validator: _validatePasswd,
             keyboardType: TextInputType.visiblePassword,
-            style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
+            style: new TextStyle(
+              color: Colors.black, /*fontFamily: "Inter"*/
+            ),
             // obscureText: false,
             obscureText: _obscureText,
             decoration: InputDecoration(
@@ -304,8 +320,10 @@ class _RegisterActivityState extends State<RegisterActivity> {
               hintText:
                   _passvalidate == 1 ? 'Password' : 'Password is Required',
               hintStyle: TextStyle(
-                  color: _passvalidate == 1 ? Colors.black : Colors.red,
-                  fontFamily: "Inter"),
+                color: _passvalidate == 1
+                    ? Colors.black
+                    : Colors.red, /*fontFamily: "Inter"*/
+              ),
               //labelText: 'Password',
               suffixIcon: new GestureDetector(
                 onTap: () {
@@ -367,7 +385,7 @@ class _RegisterActivityState extends State<RegisterActivity> {
                     ),
                     child: const Center(
                         child: Text(
-                      'SIGN IN',
+                      'SIGN UP',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: Colors.white,
@@ -426,12 +444,45 @@ class _RegisterActivityState extends State<RegisterActivity> {
   }
 
   _sendToServer() {
-    if (_key.currentState.validate()) {
+    if (username.isEmpty && Email.isEmpty) {
+      if (username.isEmpty) {
+        setState(() {
+          //_emaivalidate =false;
+          _phonevalidate = 2;
+        });
+        print('please enter username1  $_phonevalidate');
+      } else {
+        setState(() {
+          _emaivalidate = 2;
+          _phonevalidate = 2;
+        });
+        print('please enter username2 $_phonevalidate');
+      }
+      print('please enter email or phonenumber');
+    } else {}
+    if (pwd.isEmpty) {
+      setState(() {
+        _passvalidate = 2;
+      });
+      print('please enter password');
+    } else {}
+    if ((Phone.isNotEmpty || Email.isNotEmpty) && pwd.isNotEmpty) {
+      if (Phone.isNotEmpty) {
+        _datareciver(username, pwd, Email, Phone, ccode);
+      } else {
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.info,
+            title: "please try adding Phone number");
+      }
+    }
+    /*if (_key.currentState.validate()) {
       // No any error in validation
       _key.currentState.save();
-      if(username.isNotEmpty && pwd.isNotEmpty && Phone.isNotEmpty) {
+      if(*/ /*username.isNotEmpty &&*/ /* pwd.isNotEmpty && Phone.isNotEmpty) {
         _datareciver(username, pwd, Email, Phone, ccode);
       }else{
+
         Fluttertoast.showToast(
             msg: "Please fill the required Details!", toastLength: Toast.LENGTH_LONG,gravity:ToastGravity.BOTTOM,fontSize:15);
       }
@@ -440,101 +491,101 @@ class _RegisterActivityState extends State<RegisterActivity> {
       setState(() {
         _validate = true;
       });
-    }
+    }*/
   }
 
-  _datareciver(String username, String pwd,String email,String phone, String ccode) async {
+  _datareciver(String username, String pwd, String email, String phone,
+      String ccode) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     print('contry code is $ccode');
-    var data,datavalue;
+    var data, datavalue;
     var body;
-    if(email.isNotEmpty) {
-       body = {
+    if (email.isNotEmpty) {
+      body = {
         "email": "$email",
         "ph": "$phone",
         "country_code": "$ccode",
-         "terms": true,
+        "terms": true,
         "company_id": 1,
         "password": "$pwd"
       };
-    }else{
-       body = {
+    } else {
+      body = {
         //"email": "$email",
         "ph": "$phone",
         "country_code": "$ccode",
-         "terms": true,
+        "terms": true,
         "company_id": 1,
         "password": "$pwd"
       };
     }
     print(body);
-    Navigator.pushReplacement(
+    /* Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone,body:body)));
+            builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone,body:body)));*/
 
-    // var response1 = await
-    // http.post(Uri.parse('https://api.mapmycrop.com/auth/register'),
-    //   headers: {
-    //     "Content-Type" : "application/json"
-    //   },
-    //   body: jsonEncode(body),
-    // );
-    // print(response1.statusCode);
-    // print(response1.body);
-    // data = jsonDecode(response1.body);
-    // // prefs.setString('', value)
-    // if(response1.statusCode==200 ||response1.statusCode==201){
-    //   Navigator.pushReplacement(
-    //       context,
-    //       MaterialPageRoute(
-    //           builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));
-    //   // QuickAlert.show(
-    //   //     context: context,
-    //   //     type: QuickAlertType.success,
-    //   //     text: 'Your account has been created Successfully!',
-    //   //     confirmBtnText:'Ok',
-    //   //     onConfirmBtnTap:(){
-    //   //       // prefs.setString('api_key', data['apikey']);
-    //   //       // prefs.setString('email', data['email']);
-    //   //       // prefs.setString('ph', data['ph']);
-    //   //       // prefs.setBool('_isLoggedIn', true);
-    //   //       Navigator.pop(context);
-    //   //       Navigator.pushReplacement(
-    //   //           context,
-    //   //           MaterialPageRoute(
-    //   //               builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));//const DashboardActivity()));//
-    //   //     }
-    //   // );
-    // }else{
-    //   // showDialog(
-    //   //     context: context,
-    //   //     builder: (BuildContext context) {
-    //   //       return AlertDialog(
-    //   //         backgroundColor: Colors.red[100],
-    //   //         title: Text("Please Verify"),
-    //   //         content: Text(
-    //   //             "VERIFY|\n Please Enter Valid Credentials"),
-    //   //         actions: <Widget>[
-    //   //           IconButton(
-    //   //               icon: Icon(Icons.check),
-    //   //               onPressed: () {
-    //   //                 /* Navigator.pushReplacement(
-    //   //                     context,
-    //   //                     MaterialPageRoute(
-    //   //                         builder: (BuildContext context) => VerifyOTPActivity(username: user)));*/
-    //   //                 Navigator.pop(context);
-    //   //               })
-    //   //         ],
-    //   //       );
-    //   //     });
-    //   QuickAlert.show(
-    //     context: context,
-    //     type: QuickAlertType.error,
-    //     title: 'Oops...',
-    //     text: await changeLanguage('${data['detail']}')//'Something went wrong,Please verify details!',
-    //   );
-    // }
+    var response1 = await http.post(
+      Uri.parse('https://api.mapmycrop.com/auth/register'),
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode(body),
+    );
+    print(response1.statusCode);
+    print(response1.body);
+    data = jsonDecode(response1.body);
+    // prefs.setString('', value)
+    if (response1.statusCode == 200 || response1.statusCode == 201) {
+      // Navigator.pushReplacement(
+      //     context,
+      //     MaterialPageRoute(
+      //         builder: (BuildContext context) => OtpPage(ccode:ccode,phone:Phone)));
+      QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          text: 'Your account has been created Successfully!',
+          confirmBtnText: 'Ok',
+          onConfirmBtnTap: () {
+            // prefs.setString('api_key', data['apikey']);
+            // prefs.setString('email', data['email']);
+            // prefs.setString('ph', data['ph']);
+            // prefs.setBool('_isLoggedIn', true);
+            Navigator.pop(context);
+            Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (BuildContext
+                        context) => /*OtpPage(ccode:ccode,phone:Phone)*/ LoginPageActivity())); //const DashboardActivity()));//
+          });
+    } else {
+      // showDialog(
+      //     context: context,
+      //     builder: (BuildContext context) {
+      //       return AlertDialog(
+      //         backgroundColor: Colors.red[100],
+      //         title: Text("Please Verify"),
+      //         content: Text(
+      //             "VERIFY|\n Please Enter Valid Credentials"),
+      //         actions: <Widget>[
+      //           IconButton(
+      //               icon: Icon(Icons.check),
+      //               onPressed: () {
+      //                 /* Navigator.pushReplacement(
+      //                     context,
+      //                     MaterialPageRoute(
+      //                         builder: (BuildContext context) => VerifyOTPActivity(username: user)));*/
+      //                 Navigator.pop(context);
+      //               })
+      //         ],
+      //       );
+      //     });
+      QuickAlert.show(
+          context: context,
+          type: QuickAlertType.error,
+          title: 'Oops...',
+          text: await changeLanguage(
+              '${data['detail']}') //'Something went wrong,Please verify details!',
+          );
+    }
   }
 
   DateTime currentBackPressTime;
@@ -553,7 +604,6 @@ class _RegisterActivityState extends State<RegisterActivity> {
     return Future.value(true);
   }
 }
-
 
 const List<Map<String, dynamic>> countries = [
   {
@@ -2280,16 +2330,15 @@ const List<Map<String, dynamic>> countries = [
   }
 ];
 
-
 class PhoneNumber {
   String countryISOCode;
   String countryCode;
   String number;
 
   PhoneNumber({
-     this.countryISOCode,
-     this.countryCode,
-     this.number,
+    this.countryISOCode,
+    this.countryCode,
+    this.number,
   });
 
   String get completeNumber {

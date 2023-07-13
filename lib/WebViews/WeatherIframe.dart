@@ -42,7 +42,7 @@ class _WeatherWebViewState extends State<WeatherWebView> {
                 onWebResourceError: (WebResourceError webviewer) {
                   print("Internet Error");
                 },
-                initialUrl: Uri.encodeFull("https://app.mapmycrop.com/mobile/WeatherMap.html"),//http://115.124.127.208/PHP/PMC/Pune_Urban_Mobile_App/task.php
+                initialUrl: Uri.encodeFull("https://embed.windy.com/embed2.html?&width=650&height=450&zoom=8&level=surface&overlay=rain&product=ecmwf&menu=&message=true&marker=true&calendar=24&pressure=&type=map&location=coordinates&detail=&metricWind=default&metricTemp=default&radarRange=-1"),//http://115.124.127.208/PHP/PMC/Pune_Urban_Mobile_App/task.php
                 javascriptMode: JavascriptMode.unrestricted,
                 onWebViewCreated: (WebViewController webViewController) {
                   _controller.complete(webViewController);

@@ -42,17 +42,17 @@ class _FarmIdScreenState extends State<FarmIdScreen> {
     print(api_key);
 
     var response = await http
-        .get(Uri.parse('http://api.mapmycrop.store/farm/?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     print(response.statusCode);
     print(response.body);
     var data = await jsonDecode(response.body);
-    print(data['features'][0]['properties']['id']);
-    print(data['features'][0]['properties']['name']);
+    print(data[0]['id']);
+    print(data[0]['name']);
     //farmData = data.map((e)=> FarmDetails.fromJson(e)).toList();
     for (int i = 0; i < data['features'].length; i++) {
       setState(() {
-        idList.add(data['features'][i]['properties']['id']);
-        nameList.add(data['features'][i]['properties']['name']);
+        idList.add(data[i]['id']);
+        nameList.add(data[i]['name']);
         farmCoords.add(jsonDecode(data['features'][i]['geometry']['coordinates'][0].toString()));
       });
     }
@@ -76,7 +76,7 @@ class _FarmIdScreenState extends State<FarmIdScreen> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),

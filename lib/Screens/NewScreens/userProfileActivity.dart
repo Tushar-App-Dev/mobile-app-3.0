@@ -608,9 +608,16 @@
 //   }
 // }
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:mmc_master/Authentication/ForgtPasswordActivity.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:path/path.dart' as path;
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -628,8 +635,9 @@ import 'ContactUsActivity.dart';
 import 'EditProfileActivity.dart';
 import 'HelpScreenActivity.dart';
 import 'PrivacyPolicyAcivity.dart';
+import 'ResetPasswordActivity.dart';
 import 'TermsAndConditionActivity.dart';
-
+import'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 // class userProfileActivity extends StatefulWidget {
 //   // final String user;
 //   // final String usercred;
@@ -1153,18 +1161,63 @@ class userProfileActivity extends StatefulWidget {
 
 class _userProfileActivityState extends State<userProfileActivity> {
   var email, phone;
+  Uint8List image;
+  var api_key;
+  File _photo;
+  final ImagePicker _picker = ImagePicker();
+  String imageUrl = '';
+  SharedPreferences prefs;
+  CollectionReference userProfile = FirebaseFirestore.instance.collection('ProfileImages');
+  firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     fetchUserData();
   }
+  Future imgFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
+    setState(() {
+      if (pickedFile != null) {
+        _photo = File(pickedFile.path);
+        uploadFile();
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+  Future uploadFile() async {
+    if (_photo == null) return;
+    final fileName = path.basename(_photo.path);
+    final destination = '$api_key/$fileName';
+    try {
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref(destination)
+          .child('$api_key/');
+
+     await ref.putFile(_photo);
+      print('operation successfull ${ref.fullPath}');
+
+   //   final storageRef = firebase_storage.FirebaseStorage.instance.ref();
+
+      final imageUrl = await ref.getDownloadURL();
+      print('ulpload successfull here '+imageUrl);
+      setState(() {
+        this.imageUrl = imageUrl;
+      });
+      await addUserProfile();
+
+    } catch (e) {
+      print('error occured');
+    }
+
+  }
   void fetchUserData() async {
     var data, profileData;
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+     prefs = await SharedPreferences.getInstance();
     //setState(() {
-    var api_key = await prefs.getString('api_key');
+     api_key = await prefs.getString('api_key');
     var response1 = await http.get(
         Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
     print(
@@ -1175,7 +1228,39 @@ class _userProfileActivityState extends State<userProfileActivity> {
     setState(() {
       email = profileData['email'];
       phone = profileData['phone'];
+      imageUrl = prefs.getString('profileImage')??'';
     });
+    if(imageUrl.isEmpty){
+      var result = await userProfile.doc(api_key).get();
+      print(result.data() );
+      if(result.data()!=null){
+        setState(() {
+          imageUrl = result['profileImage'];
+          prefs.setString('profileImage', imageUrl);
+        });
+      }
+    }
+  }
+  Future<void> addUserProfile() {
+    // Calling the collection to add a new user
+    return userProfile.doc(api_key)
+    //adding to firebase collection
+        .set({
+      //Data added in the form of a dictionary into the document.
+      'profileImage': imageUrl
+    }).then((value) async {
+      prefs.setString('profileImage', imageUrl);
+      print("User image data Added ");
+      QuickAlert.show(
+          context: context,
+          type: QuickAlertType.success,
+          text: await changeLanguage('Produce added Successfully'),
+          confirmBtnText:'Ok',
+          onConfirmBtnTap:(){
+            Navigator.pop(context);
+          }
+      );
+    }).catchError((error) => print(" failed with this error $error"));
   }
 
   @override
@@ -1183,7 +1268,7 @@ class _userProfileActivityState extends State<userProfileActivity> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Color(0XFFECB34F),
-        title:ChangedLanguage(text:'Profile'),
+        title:ChangedLanguage(text:'Profile',style: TextStyle(color: Colors.white),),
         leading: InkWell(
             onTap: () {
               Navigator.pop(context);
@@ -1208,17 +1293,45 @@ class _userProfileActivityState extends State<userProfileActivity> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    Container(
-                      height: 70,
-                      width: 70,
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(width: 2, color: Colors.orange),
-                        image: DecorationImage(
-                            image: AssetImage(
-                                'assets/new_images/logo.png')), //CachedNetworkImageProvider('https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTD8u1Nmrk78DSX0v2i_wTgS6tW5yvHSD7o6g&usqp=CAU')),
-                      ),
+
+
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          height: 70,
+                          width: 70,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(width: 2, color: Colors.orange),
+                            image: DecorationImage(
+                                image: imageUrl.isEmpty?AssetImage(
+                                    'assets/new_images/logo.png'):NetworkImage(imageUrl),fit: BoxFit.fill), //CachedNetworkImageProvider('https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTD8u1Nmrk78DSX0v2i_wTgS6tW5yvHSD7o6g&usqp=CAU')),
+                          ),
+                        ),
+                        InkWell(
+                            onTap: () async {
+                              /*var image = await ImagePicker()
+                                  .pickImage(source: ImageSource.gallery);
+                              var imageBytes = await image.readAsBytes();
+                              setState(() {
+                                this.image = imageBytes;
+                              });
+                              print(imageBytes);*/
+
+                              await imgFromGallery();
+                              //uploadPic();
+                            },
+                          child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white,
+                              ),
+
+                              child: Icon(Icons.add_circle_outline,color:Colors.orange)),
+                        )
+                      ],
                     ),
                     10.width,
                     Column(
@@ -1280,7 +1393,7 @@ class _userProfileActivityState extends State<userProfileActivity> {
                     bankingOption(Banking_ic_security,
                         Banking_lbl_Change_Password, Banking_pinkColor)
                         .onTap(() {
-                      // BankingChangePassword().launch(context);
+                      Navigator.push(context,MaterialPageRoute(builder: (context)=>ForgtPasswordActivity()));
                     }),
                     bankingOption(
                       Banking_ic_Share,
@@ -1392,6 +1505,14 @@ class _userProfileActivityState extends State<userProfileActivity> {
                             onConfirmBtnTap: () async {
                             SharedPreferences prefs =
                             await SharedPreferences.getInstance();
+                            FirebaseAnalytics.instance.logEvent(
+                              name: "logged_out",
+                              parameters: {
+                                "content_type": "Activity_planned",
+                                "api_key": api_key,
+
+                              },
+                            ).onError((error, stackTrace) => print('analytics error is $error'));
                             prefs.setBool('_isLoggedIn', false);
                             Navigator.pushReplacement(
                             context,

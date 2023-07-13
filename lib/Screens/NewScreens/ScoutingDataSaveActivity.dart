@@ -29,13 +29,28 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
   bool _validate = false;
   String topic,comments, api_key,farm,farmId,attachment;
   List<String> farmIdList = [], farmNameList = [];
-  List<String> topicList = [
+  List<String> topicList = /*[
     'Disease',
     'Weeds',
     'Lodging',
     'Waterlogging',
     'Other',
     'Pests'
+  ]*/[
+    "Disease",
+    "Pests",
+    "Water logging",
+    "Weeds",
+    "Lodging",
+
+    "Ground Visit",
+    "Soil Moisture Readings",
+    "Soil Temperature Readings",
+    "Soil Sample Collection",
+    "Physical Infections Inspections",
+    "Fungal Attack",
+    "Irrigation Issues",
+    "Others"
   ];
   bool _commentvalidate=true;
   TextEditingController _commentController = TextEditingController();
@@ -291,7 +306,7 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 18,
-                      fontFamily: "Inter",
+                      /*fontFamily: "Inter"*/
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -338,16 +353,16 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
     farmNameList.clear();
     api_key = prefs.getString('api_key');
     var response = await http
-        .get(Uri.parse('http://api.mapmycrop.store/farm/?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     print(response.statusCode);
     print(response.body);
     var data = await jsonDecode(response.body);
-    print(data['features'][0]['properties']['id']);
-    print(data['features'][0]['properties']['name']);
+    print(data[0]['id']);
+    print(data[0]['name']);
     for (int i = 0; i < data['features'].length; i++) {
       setState(() {
-        farmIdList.add(data['features'][i]['properties']['id']);
-        farmNameList.add(data['features'][i]['properties']['name']);
+        farmIdList.add(data[i]['id']);
+        farmNameList.add(data[i]['name']);
       });
     }
   }
@@ -364,7 +379,7 @@ class _ScoutingDataSaveActivityState extends State<ScoutingDataSaveActivity> {
       "geometry": "POINT(${widget.lng} ${widget.lat})",
       "note_type": topic,
       "comments": comments,
-      "attachment": attachment.replaceAll("\"", "")
+      "attachment": attachment??''.replaceAll("\"", "")
     };
     var response = await http.post(Uri.parse('https://api.mapmycrop.com/scouting/?api_key=$api_key'),headers: {
       'accept': "application/json",

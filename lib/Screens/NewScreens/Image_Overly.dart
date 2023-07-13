@@ -50,8 +50,8 @@ class _OverlayImagePageState extends State<OverlayImagePage> {
     var data = await jsonDecode(response.body);
     for (int i = 0; i < data['features'].length; i++) {
       setState(() {
-        farmIdList.add(data['features'][i]['properties']['id']);
-        farmNameList.add(data['features'][i]['properties']['name']);
+        farmIdList.add(data[i]['id']);
+        farmNameList.add(data[i]['name']);
       });
     }
     setState(() {
@@ -78,8 +78,8 @@ class _OverlayImagePageState extends State<OverlayImagePage> {
       currentZoom = 15;
       mapController.move(currentCenter, currentZoom);
       var bbox = data['features'][0]["properties"]['bbox'];
-      farmarea=data['features'][0]['properties']['area'];
-      cropname=data['features'][0]['properties']['crops'].isNotEmpty?data['features'][0]['properties']['crops'][0]['name']:'';
+      farmarea=data[0]['area'];
+      cropname=data[0]['crops'].isNotEmpty?data[0]['crops'][0]['name']:'';
       bounds = LatLngBounds(LatLng(bbox[1], bbox[0]),LatLng(bbox[3], bbox[2]));
     });
      getStandardYield(cropname);

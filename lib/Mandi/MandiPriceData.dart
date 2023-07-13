@@ -216,7 +216,7 @@ class _MandiPriceDtaState extends State<MandiPriceDta> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 15,
-                fontFamily: "Inter",
+                /*fontFamily: "Inter",*/
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -567,7 +567,7 @@ class _MandiPriceDtaState extends State<MandiPriceDta> {
                         children:[
                           Padding(
                               padding: const EdgeInsets.only(left: 10.0,right: 12.0,top: 10.0,bottom: 15.0),
-                              child: Text('Updated Date : '+MandiList.updatedDate.toString().substring(0,10))
+                              child: Text('Last Updated on : '+MandiList.updatedDate.toString().substring(0,10))
 
                             //Text('Updated Date : '+MandiList.updatedDate.toString().substring(0,10)),
                           ),

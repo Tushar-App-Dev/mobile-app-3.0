@@ -69,13 +69,13 @@ class _ScheduleEventState extends State<ScheduleEvent> {
     //prefs.setString('api_key', 'c39f7457e507403bae918f7996db7a68');
     api_key = prefs.getString('api_key');
     var response = await http.get(
-        Uri.parse('http://api.mapmycrop.store/farm/?api_key=$api_key'));
+        Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     print(response.statusCode);
     print(response.body);
     var data = await jsonDecode(response.body);
-    print(data['features'][0]['properties']['id']);
+    print(data[0]['id']);
     for(int i=0;i<data['features'].length;i++){
-      farmsIdList.add(data['features'][i]['properties']['id']);
+      farmsIdList.add(data[i]['id']);
     }
   }
 

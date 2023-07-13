@@ -65,7 +65,7 @@ getProfileData()async{
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 16,
-                fontFamily: "Inter",
+                /*fontFamily: "Inter"*/
                 fontWeight: FontWeight.w600,
               ),
             ),

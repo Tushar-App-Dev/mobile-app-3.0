@@ -27,8 +27,8 @@ class _CropGuideDashboardState extends State<CropGuideDashboard> {
           "Crop Guides",
           style: TextStyle(
             color: Colors.white,
-            fontSize: 16,
-            fontFamily: "Inter",
+            fontSize: 15,
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),

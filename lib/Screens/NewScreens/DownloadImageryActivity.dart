@@ -259,7 +259,7 @@ class _DownloadImageryActivityState extends State<DownloadImageryActivity> {
           style: TextStyle(
             color: Colors.white,
             fontSize: 15,
-            fontFamily: "Inter",
+            /*fontFamily: "Inter"*/
             fontWeight: FontWeight.w600,
           ),
         ),

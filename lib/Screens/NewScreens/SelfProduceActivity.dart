@@ -3,12 +3,14 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:path/path.dart' as path;
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:translator/translator.dart';
@@ -17,7 +19,8 @@ import '../../constants/constants.dart';
 import '../constant/Constant.dart';
 
 class SelfProduce extends StatefulWidget {
-  const SelfProduce({Key key}) : super(key: key);
+  final email,phone;
+  const SelfProduce({Key key, this.email, this.phone}) : super(key: key);
 
   @override
   State<SelfProduce> createState() => _SelfProduceState();
@@ -25,8 +28,12 @@ class SelfProduce extends StatefulWidget {
 
 class _SelfProduceState extends State<SelfProduce> {
   //FirebaseStorage _storage = FirebaseStorage.instance;
-  FirebaseStorage _storage = FirebaseStorage.instance;
-
+  //FirebaseStorage _storage = FirebaseStorage.instance;
+  File _photo;
+  final ImagePicker _picker = ImagePicker();
+  firebase_storage.FirebaseStorage storage = firebase_storage.FirebaseStorage.instance;
+  String imageUrl = "";
+  String imageUrl1 = "";
   /*Future<Uri>*/ /*uploadPic() async {
 
     //Get the file from the image picker and store it
@@ -70,6 +77,8 @@ class _SelfProduceState extends State<SelfProduce> {
       varietyHint = 'Variety of Product',
       varietyRequired = 'Variety is Required',
       api_key,
+      phone_number,
+      email,
       typeOfCrop,
       variety,
       note;
@@ -85,6 +94,8 @@ class _SelfProduceState extends State<SelfProduce> {
   getCrops() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     api_key = prefs.getString('api_key');
+    phone_number = widget.phone;
+    email = widget.email;
     // varietyHint = await changeLanguage("Variety of Product");
     // varietyRequired = await changeLanguage('Variety is Required');
     // var response = await http.get(Uri.parse("https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
@@ -99,7 +110,99 @@ class _SelfProduceState extends State<SelfProduce> {
     }
     //print(cropList);
   }
+  Future imgFromGallery() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
+    setState(() {
+      if (pickedFile != null) {
+        _photo = File(pickedFile.path);
+        uploadFile();
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+  Future imgFromCamera() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      if (pickedFile != null) {
+        _photo = File(pickedFile.path);
+        uploadFile1();
+      } else {
+        print('No image selected.');
+      }
+    });
+  }
+
+
+  Future uploadFile() async {
+    if (_photo == null) return;
+    final fileName = path.basename(_photo.path);
+    final destination = 'files/$fileName';
+    try {
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref(destination)
+          .child('file/');
+
+      await ref.putFile(_photo);
+      print('operation successfull ${ref.fullPath}');
+
+      //   final storageRef = firebase_storage.FirebaseStorage.instance.ref();
+
+      final imageUrl = await ref.getDownloadURL();
+      print('ulpload successfull here '+imageUrl);
+      setState(() {
+        this.imageUrl = imageUrl;
+      });
+
+    } catch (e) {
+      print('error occured');
+    }
+
+  }
+  Future uploadFile1() async {
+    if (_photo == null) return;
+    final fileName = path.basename(_photo.path);
+    final destination = 'files/$fileName';
+    try {
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref(destination)
+          .child('file/');
+
+      await ref.putFile(_photo);
+      print('operation successfull ${ref.fullPath}');
+
+      //   final storageRef = firebase_storage.FirebaseStorage.instance.ref();
+
+      final imageUrl = await ref.getDownloadURL();
+      print('ulpload successfull here '+imageUrl);
+      setState(() {
+        imageUrl1 = imageUrl;
+      });
+
+    } catch (e) {
+      print('error occured');
+    }
+
+  }
+  /*Future uploadFile() async {
+    if (_photo == null) return;
+    final fileName = path.basename(_photo.path);
+    final destination = '$fileName';
+
+    try {
+      final ref = firebase_storage.FirebaseStorage.instance
+          .ref(destination)
+          .child('file/');
+      await ref.putFile(_photo).then((p0) => print(p0));
+      print('operation successfull');
+
+    } catch (e) {
+      print('error occured');
+    }
+  }
+*/
   void imageSelectorCamera(imageSource) async {
     var image = await ImagePicker().pickImage(source: imageSource);
     var imageBytes = await image.readAsBytes();
@@ -114,6 +217,11 @@ class _SelfProduceState extends State<SelfProduce> {
   }
 
   Future<void> addSellProduce() {
+
+    DateTime currentTime = DateTime.now();
+    String stringTime = currentTime.toString();
+    //print(stringTime.substring(0,stringTime.length-7));
+    stringTime = stringTime.substring(0,stringTime.length-7);
     // Calling the collection to add a new user
     return sellProduce
         //adding to firebase collection
@@ -121,10 +229,16 @@ class _SelfProduceState extends State<SelfProduce> {
       //Data added in the form of a dictionary into the document.
       'api_key': api_key,
       'crop': cropValue,
+      'email': email??'Not specified',
+      'phone': phone_number??'Not specified',
       'variety': varietyController.text,
-      'quantity': quantityController.text,
-      'price': priceController.text,
-      'note': noteController.text
+      'quantity': quantityController.text+weightType,
+      'price': priceController.text+"/kg",
+      'note': noteController.text,
+      'image1': imageUrl1,
+      'image2': imageUrl,
+      'updationTime': stringTime
+
     }).then((value) async {
       print("Sell produce data Added $value");
       QuickAlert.show(
@@ -137,6 +251,7 @@ class _SelfProduceState extends State<SelfProduce> {
           quantityController.clear();
           priceController.clear();
           noteController.clear();
+          Navigator.pop(context);
         }
       );
     }).catchError((error) => print(" failed with this error $error"));
@@ -156,9 +271,12 @@ class _SelfProduceState extends State<SelfProduce> {
             child: Image.asset('assets/new_images/back.png')),
         title: const ChangedLanguage(
           text: "Add Produce",
-          style: TextStyle(
-            color: Colors.black,
-          ),
+           style: TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          /*fontFamily: "Inter"*/
+          fontWeight: FontWeight.w600,
+        ),
         ),
       ),
       body: Stack(
@@ -278,7 +396,7 @@ class _SelfProduceState extends State<SelfProduce> {
                           child: CustomTextField(
                               //validator: _validateName,
                               style: TextStyle(color: Colors.black),
-                              keyboardType: TextInputType.text,
+                              keyboardType: TextInputType.number,
                               controller: quantityController,
                               //hintText:"Quantity",
                               hintText: quantityValidate
@@ -328,6 +446,7 @@ class _SelfProduceState extends State<SelfProduce> {
                                 print(newvalue);
                                 setState(() {
                                   weightType = newvalue;
+                                  //print(weightType);
                                   // int index = cropList.indexOf(newvalue);
                                   //farm = farmIdList[index];
                                 });
@@ -419,7 +538,7 @@ class _SelfProduceState extends State<SelfProduce> {
                     ],
                   ),*/
                   const ChangedLanguage(
-                    text: 'Price',
+                    text: 'Price (per Kg)',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -434,7 +553,7 @@ class _SelfProduceState extends State<SelfProduce> {
                     child: CustomTextField(
                         //validator: _validateName,
                         style: TextStyle(color: Colors.black),
-                        keyboardType: TextInputType.text,
+                        keyboardType: TextInputType.number,
                         controller: priceController,
                         // decoration: InputDecoration(
                         //   fillColor: Colors.white,
@@ -510,13 +629,14 @@ class _SelfProduceState extends State<SelfProduce> {
                     children: <Widget>[
                       InkWell(
                         onTap: () async {
-                          var image = await ImagePicker()
+                          await imgFromCamera();
+                         /* var image = await ImagePicker()
                               .pickImage(source: ImageSource.camera);
                           var imageBytes = await image.readAsBytes();
                           setState(() {
                             image1 = imageBytes;
                           });
-                          print(imageBytes);
+                          print(imageBytes);*/
                           //uploadPic();
                         },
                         child: Padding(
@@ -527,7 +647,7 @@ class _SelfProduceState extends State<SelfProduce> {
                               height: width(context) * 0.33,
                               child: Column(
                                 children: <Widget>[
-                                  image1 == null
+                                  imageUrl1.isEmpty
                                       ? Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: Image.asset(
@@ -538,8 +658,8 @@ class _SelfProduceState extends State<SelfProduce> {
                                         )
                                       : Padding(
                                           padding: const EdgeInsets.all(4.0),
-                                          child: Image.memory(
-                                            image1,
+                                          child: Image.network(
+                                            imageUrl1,
                                             width: width(context) * 0.33,
                                             height: width(context) * 0.2,
                                           ),
@@ -560,13 +680,14 @@ class _SelfProduceState extends State<SelfProduce> {
                       ),
                       InkWell(
                         onTap: () async {
-                          var image = await ImagePicker()
+                          imgFromGallery();
+                         /* var image = await ImagePicker()
                               .pickImage(source: ImageSource.gallery);
                           var imageBytes = await image.readAsBytes();
                           print(imageBytes);
                           setState(() {
                             image2 = imageBytes;
-                          });
+                          });*/
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(4.0),
@@ -576,7 +697,7 @@ class _SelfProduceState extends State<SelfProduce> {
                               height: width(context) * 0.33,
                               child: Column(
                                 children: <Widget>[
-                                  image2 == null
+                                  imageUrl.isEmpty
                                       ? Padding(
                                           padding: const EdgeInsets.all(4.0),
                                           child: Image.asset(
@@ -587,8 +708,8 @@ class _SelfProduceState extends State<SelfProduce> {
                                         )
                                       : Padding(
                                           padding: const EdgeInsets.all(4.0),
-                                          child: Image.memory(
-                                            image2,
+                                          child: Image.network(
+                                            imageUrl,
                                             width: width(context) * 0.33,
                                             height: width(context) * 0.2,
                                           ),
@@ -614,7 +735,80 @@ class _SelfProduceState extends State<SelfProduce> {
               ),
             ),
           ),
-          Container(
+          GestureDetector(
+            onTap: (){
+              print(
+                  'variety : ${varietyController.text} \n quantity : ${quantityController.text} \nprice : ${priceController.text} \n note : ${noteController.text} \ncrop : $cropValue \n');
+              if (varietyController.text == null ||
+                  varietyController.text.isEmpty) {
+                setState(() {
+                  varietyValidate = false;
+                  varietyController.text = '';
+                });
+              }
+              if (quantityController.text == null ||
+                  quantityController.text.isEmpty) {
+                setState(() {
+                  quantityValidate = false;
+                  quantityController.text = '';
+                });
+              }
+              if (priceController.text == null || priceController.text.isEmpty) {
+                setState(() {
+                  priceValidate = false;
+                  priceController.text = '';
+                });
+              }
+              if (noteController.text == null || noteController.text.isEmpty) {
+                setState(() {
+                  noteValidate = false;
+                  noteController.text = '';
+                });
+              }
+              if ((cropValue == null) &&
+                  (noteController.text == null || noteController.text.isEmpty) &&
+                  (priceController.text == null ||
+                      priceController.text.isEmpty) &&
+                  (quantityController.text == null ||
+                      quantityController.text.isEmpty) &&
+                  (varietyController.text == null ||
+                      varietyController.text.isEmpty)) {
+                print('error');
+              } else {
+                addSellProduce();
+                FirebaseAnalytics.instance.logEvent(
+                  name: "crop_added",
+                  parameters: {
+                    "content_type": "Activity_planned",
+                    "api_key": api_key,
+                    "variety": varietyController.text
+                  },
+                ).onError((error, stackTrace) => print('analytics error is $error'));
+              }
+            },
+            child: Container(
+              margin: EdgeInsets.symmetric(horizontal: 10.0),
+              height: 45.0,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: Color(0xffECB34F),
+              ),
+              //padding: const EdgeInsets.only(left: 91, right: 122, top: 20, bottom: 19, ),
+              child:  Center(
+                child: ChangedLanguage(text:
+                "Add my Produce",
+                  //textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    /*fontFamily: "Inter"*/
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ),
+         /* Container(
             width: width(context)*0.98,
             height: height(context) * 0.06,
             color: const Color(0xffECB34F),
@@ -668,7 +862,7 @@ class _SelfProduceState extends State<SelfProduce> {
             } else {
               addSellProduce();
             }
-          })
+          })*/
         ],
       ),
     );

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:mmc_master/Authentication/LoginPageActivity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,28 +64,39 @@ class _SplashScreen4State extends State<SplashScreen4> {
                 topRight: Radius.circular(12.0)),
           ),
           builder: (context) {
-            return ListView.builder(
-                itemCount: Languages.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: ListTile(
-                      title: Center(child: Text(Languages[index])),
-                      onTap: () {
-                        setState(() {
-                          prefs.setString('language', LanguageCodes[index]);
-                          Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (
-                                      BuildContext context) => const LoginPageActivity()));
-                          //print(selectedLanguage);
-                          //Navigator.pop(context);
-                        });
-                      },
-                    ),
-                  );
-                }
+            return Column(
+              children: [
+                Container(
+                  // color: Colors.white,
+                  padding: EdgeInsets.symmetric(vertical: 8) ,
+                  child: Text('Please Select Your\nPrimary Language',style: TextStyle(color: black,fontWeight: FontWeight.w600,fontSize: 18),textAlign: TextAlign.center,),
+                ),
+                Expanded(
+                  child: ListView.builder(
+                      itemCount: Languages.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                          child: ListTile(
+                            title: Center(child: Text(Languages[index])),
+                            onTap: () {
+                              setState(() {
+                                prefs.setString('language', LanguageCodes[index]);
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (
+                                            BuildContext context) => const LoginPageActivity()));
+                                //print(selectedLanguage);
+                                //Navigator.pop(context);
+                              });
+                            },
+                          ),
+                        );
+                      }
+                  ),
+                ),
+              ],
             );
           });
     }
@@ -107,7 +119,12 @@ class _SplashScreen4State extends State<SplashScreen4> {
     //print("Shared pref called");
     int isViewed = 0;
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    CollectionReference userProfile = FirebaseFirestore.instance.collection('ProfileImages');
     await prefs.setInt('onBoard', isViewed);
+    var result = await userProfile.doc(prefs.getString('api_key')).get();
+    if(result.data()!=null){
+      prefs.setString('profileImage', result['profileImage']);
+    }
     //print(prefs.getInt('onBoard'));
   }
 
@@ -221,7 +238,7 @@ class _SplashScreen4State extends State<SplashScreen4> {
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 18,
-                                fontFamily: "Inter",
+                                /*fontFamily: "Inter"*/
                                 fontWeight: FontWeight.w600,
                               ),
                             ),

@@ -42,7 +42,8 @@ class _MyWebViewState extends State<MyWebView> {
       // url=true;
       // isLoading = false;
       var laguageSelect=prefs.getString('language');
-      Url='https://mapmycrop.store/${laguageSelect}/mobiledashboard?api_key=${widget.api_key}';
+      Url='https://app.mapmycrop.com/${laguageSelect}/mobiledashboard?api_key=${widget.api_key}';
+      url = true;
     });
   }
 
@@ -71,7 +72,7 @@ class _MyWebViewState extends State<MyWebView> {
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 15,
-                fontFamily: "Inter",
+                /*fontFamily: "Inter"*/
                 fontWeight: FontWeight.w600,
               ),
             ),
