@@ -48,7 +48,7 @@ class _NewDashBoardState extends State<NewDashBoard> {
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: ClipOval(
-              child: SvgPicture.asset(
+              child: Image.asset(
                 'assets/images/default.jpg',
                 fit: BoxFit.fill,
               ),

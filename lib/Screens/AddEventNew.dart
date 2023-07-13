@@ -88,16 +88,16 @@ class _CalendarNewState extends State<CalendarNew> {
     //prefs.setString('api_key', 'c39f7457e507403bae918f7996db7a68');
     api_key = prefs.getString('api_key');
     var response = await http
-        .get(Uri.parse('http://api.mapmycrop.store/farm/?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     print(response.statusCode);
     print(response.body);
     var data = await jsonDecode(response.body);
-    print(data['features'][0]['properties']['id']);
-    print(data['features'][0]['properties']['name']);
+    print(data[0]['id']);
+    print(data[0]['name']);
     for (int i = 0; i < data['features'].length; i++) {
       setState(() {
-        farmIdList.add(data['features'][i]['properties']['id']);
-        farmNameList.add(data['features'][i]['properties']['name']);
+        farmIdList.add(data[i]['id']);
+        farmNameList.add(data[i]['name']);
       });
     }
     print(farmIdList);
@@ -667,7 +667,7 @@ class _CalendarNewState extends State<CalendarNew> {
 
 
     var response = await http.post(
-        Uri.parse('http://api.mapmycrop.store/calendar-data/?api_key=$api_key'),
+        Uri.parse('https://api.mapmycrop.com/calendar-data/?api_key=$api_key'),
         headers: {
           'accept': 'application/json',
           'Content-Type': 'application/json'

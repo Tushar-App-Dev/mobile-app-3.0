@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
 import '../Screens/NewScreens/ResetPasswordActivity.dart';
+import '../Screens/constant/Constant.dart';
+import '../constants/constants.dart';
+import 'CountryCode.dart';
 
 class ForgtPasswordActivity extends StatefulWidget {
   const ForgtPasswordActivity({Key key}) : super(key: key);
@@ -14,52 +16,65 @@ class _ForgtPasswordActivityState extends State<ForgtPasswordActivity> {
 
   GlobalKey<FormState> _key = new GlobalKey();
   bool _validate = false;
-  String pwd,cpwd;
+  String Phone,ccode;
   int _passvalidate=1;
   bool _obscureText = true;
+  int _phonevalidate = 1;
 
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: onWillPop,
-      child: Container(
-        color: Color(0xffECB34F),
-        child: Scaffold(
-          backgroundColor: Color(0xffECB34F),
-          // appBar: AppBar(
-          //   backgroundColor: Color(0xffECB34F),
-          //   elevation: 0,
-          //   title: Text(
-          //     "Reset Password",
-          //     //textAlign: TextAlign.center,
-          //     style: TextStyle(
-          //       color: Colors.white,
-          //       fontSize: 16,
-          //       fontFamily: "Inter",
-          //       fontWeight: FontWeight.w600,
-          //     ),
-          //   ),
-          // ),
-          appBar: AppBar(
-            elevation: 0.0,
-            centerTitle: false,
-            backgroundColor: Color(0xffECB34F),
-            title: Text(
-              "Forgot Password",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontFamily: "Inter",
-                fontWeight: FontWeight.w600,
-              ),
+      child: Scaffold(
+        //backgroundColor: Color(0xffECB34F),
+        // appBar: AppBar(
+        //   backgroundColor: Color(0xffECB34F),
+        //   elevation: 0,
+        //   title: Text(
+        //     "Reset Password",
+        //     //textAlign: TextAlign.center,
+        //     style: TextStyle(
+        //       color: Colors.white,
+        //       fontSize: 16,
+        //       fontFamily: "Inter",
+        //       fontWeight: FontWeight.w600,
+        //     ),
+        //   ),
+        // ),
+        // appBar: AppBar(
+        //   elevation: 0.0,
+        //   centerTitle: false,
+        //   backgroundColor: Color(0xffECB34F),
+        //   title: Text(
+        //     "Forgot Password",
+        //     style: TextStyle(
+        //       color: Colors.white,
+        //       fontSize: 16,
+        //       fontFamily: "Inter",
+        //       fontWeight: FontWeight.w600,
+        //     ),
+        //   ),
+        //   leading: InkWell(
+        //       onTap: () {
+        //         Navigator.pop(context);
+        //       },
+        //       child: Image.asset('assets/new_images/back.png')),
+        // ),
+        body: Container(
+          height: height(context),
+          width: width(context),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors:[
+                const Color.fromRGBO(200, 255, 221, 1),
+                const Color.fromRGBO(200, 255, 221, 1),
+                //const Color.fromRGBO(255, 255, 255, 1)
+              ],
             ),
-            leading: InkWell(
-                onTap: () {
-                  Navigator.pop(context);
-                },
-                child: Image.asset('assets/new_images/back.png')),
           ),
-          body: SingleChildScrollView(
+          child: SingleChildScrollView(
             child: new Form(
               // wrap with SingleChildScrollView
               child: formUI(),
@@ -86,102 +101,118 @@ class _ForgtPasswordActivityState extends State<ForgtPasswordActivity> {
       mainAxisAlignment: MainAxisAlignment.start,
       children: <Widget>[
         SizedBox(
-          height: height * 0.01,
+          height: height * 0.10,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: InkWell(
+              onTap: () {
+                Navigator.pop(context);
+              },
+              child: Image.asset('assets/new_images/back1.png',height:40,width: 40,)
+          ),
+        ),
+        SizedBox(
+          height: height * 0.04,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: ChangedLanguage( text:
+          "Please enter your phone number to reset your password\n",
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 30,vertical: 5),
+          //padding: EdgeInsets.only(top:5, bottom: 5, left: 30, right: 30),
+          //color: Colors.white,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            //color: Colors.blueAccent,
+            border: Border.all(width: 1,color: Colors.black,),
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IntlPhoneField(
+              //validator: _validatePhone,
+              style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
+              keyboardType: TextInputType.phone,
+              initialCountryCode: "IN",
+              countryCodeTextColor: Colors.black,
+              showCountryFlag: true,
+              showDropdownIcon: false,
+              decoration: InputDecoration(
+                //contentPadding:EdgeInsets.symmetric(horizontal: 20),
+                filled: true,
+                fillColor: Colors.white,
+                focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+                enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+                hintText: _phonevalidate == 1 ?'Phone Number' : 'Number is Required',
+                hintStyle: TextStyle(color: _phonevalidate == 1 ? Colors.black : Colors.red,
+                    fontFamily: "Inter"),
+                // labelText: 'Phone Number',
+              ),
+              onChanged: (phone) {
+                setState(() {
+                  Phone = phone.number;
+                  ccode = phone.countryCode.substring(1);
+                });
+                //print(phone.number);
+              },
+              onCountryChanged: (phone) {
+                setState(() {
+                  ccode = phone.countryCode.substring(1);
+                  print('Country code changed to: ' +
+                      phone.countryCode.substring(1));
+                });
+              },
+              validator: (String value) {
+                String pattern =
+                    r'^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$';
+                RegExp regExp = new RegExp(pattern);
+                if (value.length == 0) {
+                  setState(() {
+                    _phonevalidate = 2;
+                  });
+                } else if (!regExp.hasMatch(value)) {
+                  setState(() {
+                    _phonevalidate = 3;
+                    print('Invalid Number');
+                  });
+                  return 'Invalid Number';
+                } else {
+                  setState(() {
+                    _phonevalidate = 1;
+                  });
+                }
+              },
+            ),
+          ),
+        ),
+        SizedBox(
+          height: height * 0.03,
         ),
         Center(
-          child: SizedBox(
-            width: 346,
-            child: Text(
-              "We’ve sent One Time Password (OTP) to the mobile number above. Please enter your phone number to continue\n",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-              ),
-            ),
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.only(top: 10, bottom: 10, left: 31, right: 31),
-          child: TextFormField(
-            //validator: _validatePasswd,
-            keyboardType: TextInputType.number,
-            style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
-            // obscureText: false,
-            //obscureText: _obscureText,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                      color: _passvalidate == 1 ? Colors.black : Colors.red),
-                  borderRadius: BorderRadius.all(Radius.circular(10))),
-              enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                      color: _passvalidate == 1 ? Colors.black : Colors.red),
-                  borderRadius: BorderRadius.all(Radius.circular(10))),
-              hintText: _passvalidate == 1
-                  ? 'Enter Your Phone Number'
-                  : 'Number is Required',
-              hintStyle: TextStyle(
-                  color: _passvalidate == 1 ? Colors.black : Colors.red,
-                  fontFamily: "Inter"),
-              //labelText: 'Password',
-              // suffixIcon: new GestureDetector(
-              //   onTap: () {
-              //     setState(() {
-              //       _obscureText = !_obscureText;
-              //     });
-              //   },
-              //   child: new Icon(
-              //     _obscureText ? Icons.visibility : Icons.visibility_off,
-              //     color: Colors.orange,
-              //   ),
-              // ),
-              //floatingLabelBehavior: FloatingLabelBehavior.auto
-            ),
-            validator: (String value) {
-              String pattern =
-                  r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[!@#\$&*~]).{6,}$';
-              RegExp regExp = new RegExp(pattern);
-              if (value.length == 0) {
-                setState(() {
-                  _passvalidate = 2;
-                });
-              } else if (!regExp.hasMatch(value)) {
-                setState(() {
-                  _passvalidate = 3;
-                  print('Invalid password');
-                });
-                return 'Invalid password';
-              } else {
-                setState(() {
-                  _passvalidate = 1;
-                });
-              }
-            },
-            onSaved: (String val) {
-              pwd = val;
-            },
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.only(top: 30, bottom: 10, left: 31, right: 31),
           child: GestureDetector(
             onTap: () {
-              //_sendToServer();
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => ResetPasswordActivity()));
+              _sendToServer();
             },
             child: Container(
-                width: 325,
-                height: 57,
+                margin: EdgeInsets.symmetric(horizontal: 30,vertical: 5),
+                height:50,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
                   color: const Color(0xfff7941e),
                 ),
-                child: const Center(child: Text('Continue',
+                child: const Center(child: ChangedLanguage( text:'Continue',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white,
@@ -195,10 +226,18 @@ class _ForgtPasswordActivityState extends State<ForgtPasswordActivity> {
     );
   }
 
-  _sendToServer() {
+  _sendToServer() async{
     if (_key.currentState.validate()) {
       _key.currentState.save();
-      //_datareciver(username, pwd);
+      if(Phone.isNotEmpty) {
+        Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => ResetPasswordActivity(phone:Phone,ccode:ccode)));
+      }else{
+        Fluttertoast.showToast(
+            msg: await changeLanguage("Please fill the required Details!"), toastLength: Toast.LENGTH_LONG,gravity:ToastGravity.BOTTOM,fontSize:15);
+      }
     } else {
       setState(() {
         _validate = true;

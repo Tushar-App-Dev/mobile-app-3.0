@@ -58,16 +58,16 @@ class _MmcCardState extends State<MmcCard> with TickerProviderStateMixin {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var api_key = prefs.getString('api_key');
     //getCrops(api_key);
-    var url = 'http://api.mapmycrop.store/farm/?api_key=$api_key';
+    var url = 'https://api.mapmycrop.com/farm/?api_key=$api_key';
     var response = await http.get(Uri.parse(url));
     var data = jsonDecode(response.body);
     //print(response.statusCode);
-    //print(data['features'][0]['properties']['name']);
+    //print(data[0]['name']);
 
     for(int i=0;i<data['features'].length;i++){
       setState(() {
-        farmNameList.add(data['features'][i]['properties']['name']);
-        farmIdList.add(data['features'][i]['properties']['id']);
+        farmNameList.add(data[i]['name']);
+        farmIdList.add(data[i]['id']);
         //farmIdList
       });
     }

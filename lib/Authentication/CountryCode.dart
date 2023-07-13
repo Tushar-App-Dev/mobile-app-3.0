@@ -151,6 +151,7 @@ class IntlPhoneField extends StatefulWidget {
 
   /// Whether this text field should focus itself if nothing else is already focused.
   final bool autofocus;
+  final int phonevalidate;
 
   /// Autovalidate mode for text form field
   final AutovalidateMode autovalidateMode;
@@ -193,6 +194,7 @@ class IntlPhoneField extends StatefulWidget {
         this.dropDownIcon = const Icon(Icons.arrow_drop_down),
         this.autofocus = false,
         this.textInputAction,
+        this.phonevalidate =1,
         this.autovalidateMode,
         this.showCountryFlag = true});
 
@@ -204,10 +206,10 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
    List<Map<String, dynamic>> _countryList;
    Map<String, dynamic> _selectedCountry;
    List<Map<String, dynamic>> filteredCountries;
-
+int _phonevalidate =1;
   FormFieldValidator<String> validator;
 
-  int _phonevalidate =1;
+  //int _phonevalidate =1;
 
   @override
   void initState() {
@@ -341,8 +343,8 @@ class _IntlPhoneFieldState extends State<IntlPhoneField> {
               enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.white),
                   borderRadius: BorderRadius.all(Radius.circular(10))),
-              hintText: _phonevalidate == 1 ?'Phone Number' : 'Number is Required',
-              hintStyle: TextStyle(color: _phonevalidate == 1 ? Colors.black : Colors.red,
+              hintText: widget.phonevalidate == 1 ?'Phone Number' : 'Number is Required',
+              hintStyle: TextStyle(color: widget.phonevalidate == 1 ? Colors.black : Colors.red,
                   fontFamily: "Inter"),
               // labelText: 'Phone Number',
             ),

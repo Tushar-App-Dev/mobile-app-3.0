@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:math' as Math;
 import 'dart:async';
 import 'dart:io';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -18,6 +19,7 @@ import 'package:mmc_master/constants/constants.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 
 import '../constant/Constant.dart';
 
@@ -314,14 +316,7 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
 
   @override
   Widget build(BuildContext context) {
-    double screenHeight = MediaQuery
-        .of(context)
-        .size
-        .height * 0.80;
-    double screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+
 
     final GoogleMap googleMap = GoogleMap(
       padding: const EdgeInsets.only(bottom: 60, top: 80),
@@ -515,8 +510,9 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
                   margin: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 10.0),
                   width: width(context)*0.92,
                   //color: Colors.transparent,
-                  child:MapsPlacesAutocomplete(
+                  child: MapsPlacesAutocomplete(
                       mapsApiKey: 'AIzaSyCK7jH4DKtCSJ4KGTdGnFLqkMBO0Zqq2dM',
+
                       onSuggestionClick: onSuggestionClick,
                       buildItem: (Suggestion suggestion, int index) {
                         return Container(
@@ -524,7 +520,15 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
                             padding: const EdgeInsets.all(8),
                             alignment: Alignment.centerLeft,
                             color: Colors.white,
-                            child: ChangedLanguage(text:suggestion.description)
+                            child: FutureBuilder(future:changeLanguage1(suggestion.description),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 15.0),):Shimmer.fromColors(
+                                baseColor: Colors.grey.shade300,
+                                highlightColor: Colors.white,child: Card(
+                              child: SizedBox(
+                                height: height(context)*0.014,
+                                width: width(context)*0.5,
+                              ),
+                            )),)
+                          /*ChangedLanguage(text:suggestion.description)*/
                         );
                       },
                       inputDecoration: const InputDecoration(
@@ -1196,7 +1200,7 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
     var api_key = prefs.getString('api_key');
     var response = await http.post(
       // Uri.parse('https://testingnotion.ml/farm/register?api_key=$api_key'),
-      Uri.parse('http://api.mapmycrop.store/farm/register?api_key=$api_key'),
+      Uri.parse('http://api.mapmycrop.com/farm/register?api_key=$api_key'),
       headers: {"Content-Type": "application/json"},
       body: json.encode({
         "name": fieldName,
@@ -1209,10 +1213,12 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
     data = jsonDecode(response.body);
     if (response.statusCode == 201 || response.statusCode == 200) {
       print('Uploaded!');
+
       //QuickAlert.show(context: context, type: QuickAlertType.success,text: 'Farm added successfully');
       // ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       //   content: Text('Farm Created Successfully'),
       // ));
+      print(data);
       farmId = data['features'][0]['properties']['id'];
       var body = {
         // "farm": farm,
@@ -1233,6 +1239,15 @@ class _AddNewFarmsActivityState extends State<AddNewFarmsActivity> {
             'Content-Type': 'application/json'
           },
           body: jsonEncode(body));
+      FirebaseAnalytics.instance.logEvent(
+        name: "crop_added",
+        parameters: {
+          "content_type": "Activity_planned",
+          "api_key": api_key,
+          "farmid": farmId,
+          "crop": cropValue
+        },
+      ).onError((error, stackTrace) => print('analytics error is $error'));
 
       data1 = jsonDecode(response.body);
       print(data1);

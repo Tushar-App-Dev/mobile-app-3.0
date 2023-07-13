@@ -219,7 +219,7 @@ class _CropDetailsState extends State<CropDetails> {
             style: TextStyle(
               color: Colors.white,
               fontSize: 15,
-              fontFamily: "Inter",
+              /*fontFamily: "Inter"*/
               fontWeight: FontWeight.w600,
             ),
           ),

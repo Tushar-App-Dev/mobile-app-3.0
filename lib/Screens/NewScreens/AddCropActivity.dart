@@ -1,15 +1,19 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import 'package:mmc_master/Screens/NewScreens/DashboardActivity.dart';
 import 'package:mmc_master/Widgets/Loading.dart';
 import 'package:mmc_master/constants/constants.dart';
 import 'package:quickalert/models/quickalert_type.dart';
 import 'package:quickalert/widgets/quickalert_dialog.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:http/http.dart' as http;
 
+import '../constant/Constant.dart';
 import 'ExpertCall.dart';
 
 
@@ -37,7 +41,7 @@ class _AddCropActivityState extends State<AddCropActivity> {
       farmValue;
   String newFromDate, newToDate, formattedFromDate, formattedToDate;
 
-  List<String> farmIdList = [], farmNameList = [], cropList=[],seasonList= ['2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025',];
+  List<String> farmIdList = [], farmNameList = [], cropList=[],englishCropList = [],seasonList= ['2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025',];
   String farmValue1;
   String cropValue,SeasonDropDownValue;
   final FocusNode farmFocusMode = FocusNode();
@@ -64,34 +68,37 @@ class _AddCropActivityState extends State<AddCropActivity> {
     super.initState();
   }
   getCrops(String api_key) async{
-    // var response = await http.get(Uri.parse("https://api.mapmycrop.com/farm/add-crop?api_key=$api_key&farm_id=33625bb0963543f996268d3fb83af221"));
-    var response = await http.get(Uri.parse("https://api.mapmycrop.com/crop?api_key=$api_key"));
-    var cropData = jsonDecode(response.body);
-    //print(cropData);
-    for(int i = 0;i<cropData.length;i++){
-      setState(() {
-        cropList.add(cropData[i]['name']);
-      });
-    }
-    //print(cropList);
+
+    // if(prefs.getStringList('translatedCropList').isNull||prefs.getStringList('translatedCropList').last!=prefs.getString('language')){
+    //   print('this is global CropList   ${globalCropListTranslated.length}  1');
+       var response = await http.get(Uri.parse("https://api.mapmycrop.com/crop?api_key=$api_key"));
+      var cropData = jsonDecode(response.body);
+      //print(cropData);
+      for(int i = 0;i<cropData.length;i++){
+        setState(() {
+          cropList.add(cropData[i]['name']);
+        });
+      }
   }
 
   getFarms()async{
+  //  print('this is global CropList   ${globalCropListTranslated.length}');
+
     farmIdList.clear();
     farmNameList.clear();
     SharedPreferences prefs = await SharedPreferences.getInstance();
     api_key = prefs.getString('api_key');
     getCrops(api_key);
-    var url = 'http://api.mapmycrop.store/farm/?api_key=$api_key';
+    var url = 'https://api.mapmycrop.com/farm/?api_key=$api_key';
     var response = await http.get(Uri.parse(url));
     var data = jsonDecode(response.body);
     //print(response.statusCode);
-    //print(data['features'][0]['properties']['name']);
+    //print(data[0]['name']);
 
-    for(int i=0;i<data['features'].length;i++){
+    for(int i=0;i<data.length;i++){
       setState(() {
-        farmNameList.add(data['features'][i]['properties']['name']);
-        farmIdList.add(data['features'][i]['properties']['id']);
+        farmNameList.add(data[i]['name']);
+        farmIdList.add(data[i]['id']);
         //farmIdList
       });
     }
@@ -191,7 +198,12 @@ class _AddCropActivityState extends State<AddCropActivity> {
     return Scaffold(
       backgroundColor:Colors.grey.shade100,
       appBar: AppBar(
-        title:  ChangedLanguage(text:'Add Crop',style: TextStyle(color: Colors.white),),
+        title:  ChangedLanguage(text:'Crop Rotations',style: TextStyle(
+          color: Colors.white,
+          fontSize: 15,
+          /*fontFamily: "Inter"*/
+          fontWeight: FontWeight.w600,
+        ),),
         backgroundColor: Color(0xffECB34F),
         elevation: 0.0,
         leading: InkWell(
@@ -202,7 +214,7 @@ class _AddCropActivityState extends State<AddCropActivity> {
       ),
       body: SingleChildScrollView(
         child:Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 50.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
@@ -283,7 +295,28 @@ class _AddCropActivityState extends State<AddCropActivity> {
                     child: DropdownButton<String>(
                       focusNode: cropFocusMode,
                       menuMaxHeight:400,
-                      hint: Center(child: ChangedLanguage(text:'Select Crop')),
+                      hint: FutureBuilder(
+                        future: changeLanguage(cropValue??"Select Crop"),
+                        builder: (context, i) => i.hasData
+                            ? Center(
+                              child: Text(
+                          i.data,
+                          style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16.0),
+                        ),
+                            )
+                            : Shimmer.fromColors(
+                            baseColor: Colors.grey.shade300,
+                            highlightColor: Colors.white,
+                            child: Card(
+                              child: SizedBox(
+                                height:
+                                height(context) * 0.014,
+                                width: width(context) * 0.25,
+                              ),
+                            )),
+                      ),
                       value: cropValue,
                       elevation: 25,
                       isExpanded: true,
@@ -292,20 +325,32 @@ class _AddCropActivityState extends State<AddCropActivity> {
                         return DropdownMenuItem<String>(
                           value: value,
                           child: Center(
-                              child: ChangedLanguage(text:
+                              child: languageText(value)
+
+                            /*ChangedLanguage(text:
                                 value,
                                 style: TextStyle(
                                     fontWeight: FontWeight.w500),
-                              )),
+                              ),FutureBuilder(future:changeLanguage(value),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 15.0),):Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,child: Card(
+                                child: SizedBox(
+
+                                ),
+                              )),)*/
+                          ),
                         );
                       }).toList(),
                       onChanged: (String newvalue) {
-
+                        print(englishCropList[cropList.indexOf(newvalue)]);
+                        cropValue = englishCropList[cropList.indexOf(newvalue)];
                         setState(() {
                           // int index = cropList.indexOf(newvalue);
+                         // cropValue = newvalue;
                           cropValue = newvalue;
                           //farm = farmIdList[index];
                         });
+                        print(cropValue);
                       },
                     ),
                   )
@@ -526,7 +571,90 @@ class _AddCropActivityState extends State<AddCropActivity> {
               SizedBox(
                 height: 15.0,
               ),
-              Row(
+              Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    width: 120,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.white),
+                      borderRadius: BorderRadius.circular(8),
+                      color: Color(0xff103d14),
+                    ),
+                    // padding: const EdgeInsets.symmetric(
+                    //   horizontal: 23,
+                    //   vertical: 20,
+                    // ),
+                    child: Center(
+                      child: ChangedLanguage(text:
+                      "Back",
+                        //textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          // fontFamily: "Open Sans",
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    if (newToDate != null &&
+                        newFromDate != null &&
+                        farmValue1 != null &&
+                        cropValue!= null) {
+                      print(newToDate);
+                      print(newFromDate);
+                      print(farmValue1);
+                      print(cropValue);
+                      print(Description);
+                      // Navigator.pop(context);
+                      _datareciver(newToDate, newFromDate,
+                          farmValue1,cropValue, Description);
+                    } else {
+                      Fluttertoast.showToast(
+                          msg:
+                          "Sowing Date,Harvesting Date,Crop Name,Farm Name and season Should not be empty",
+                          toastLength: Toast.LENGTH_LONG,
+                          gravity: ToastGravity.BOTTOM,
+                          timeInSecForIosWeb: 1,
+                          backgroundColor: Colors.red,
+                          textColor: Colors.white,
+                          fontSize: 12.0);
+                    }
+                  },
+                  child: Container(
+                    width: 120,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: Color(0xfff7941e),
+                    ),
+                    // padding: const EdgeInsets.symmetric(
+                    //   horizontal: 23,
+                    //   vertical: 20,
+                    // ),
+                    child: Center(
+                      child: ChangedLanguage(text:
+                      "Submit",
+                        //textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 15,
+                          // fontFamily: "Open Sans",
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ]),
+             /* Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     ClipRRect(
@@ -591,7 +719,7 @@ class _AddCropActivityState extends State<AddCropActivity> {
                         ),
                       ),
                     ),
-                  ]),
+                  ]),*/
             ],
           ),
         )

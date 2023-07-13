@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:mmc_master/Model/DiseasAdvisoryModel.dart';
 import 'package:mmc_master/constants/constants.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:text_to_speech/text_to_speech.dart';
 
 import '../constant/Constant.dart';
@@ -107,7 +108,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             style: TextStyle(
               color: Colors.white,
               fontSize: 15,
-              fontFamily: "Inter",
+              /*fontFamily: "Inter"*/
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -166,7 +167,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
                       Icon(!symptomsRunning ? Icons.mic_outlined : Icons.pause)
                           .onTap(() async {
                         translatedString =
-                            await changeLanguage(widget.data.symptoms);
+                            await changeLanguage1(widget.data.symptoms);
                         if (!symptomsRunning) {
                           setState(() {
                             symptomsRunning = true;
@@ -190,11 +191,32 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             ),
             Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: ChangedLanguage(
+                child: FutureBuilder(
+                  future: changeLanguage1(widget.data.symptoms),
+                  builder: (context, i) => i.hasData
+                      ? Text(
+                    i.data,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0),
+                  )
+                      : Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.white,
+                      child: Card(
+                        child: SizedBox(
+                          height: height(context) * 0.014,
+                          width: width(context) * 0.25,
+                        ),
+                      )
+                  ),
+                ),
+
+               /* ChangedLanguage(
                   text: widget.data.symptoms,
                   textAlign:TextAlign.justify,
                   style: TextStyle(fontSize: 16),
-                )
+                )*/
 
                 //Text(widget.data.symptoms,textAlign: TextAlign.justify,style: TextStyle(fontSize: 16),),
                 ),
@@ -216,7 +238,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
                   //Text('Causes of Disease',style: TextStyle(fontWeight: FontWeight.w700,fontSize: 20),),
                   Icon(!causeRunning ? Icons.mic_outlined : Icons.pause)
                       .onTap(() async {
-                    translatedString = await changeLanguage(widget.data.causes);
+                    translatedString = await changeLanguage1(widget.data.causes);
                     if (!causeRunning) {
                       setState(() {
                         symptomsRunning = false;
@@ -238,11 +260,32 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             ),
             Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: ChangedLanguage(
+                child: FutureBuilder(
+                  future: changeLanguage1(widget.data.causes),
+                  builder: (context, i) => i.hasData
+                      ? Text(
+                    i.data,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0),
+                  )
+                      : Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.white,
+                      child: Card(
+                        child: SizedBox(
+                          height: height(context) * 0.014,
+                          width: width(context) * 0.25,
+                        ),
+                      )
+                  ),
+                ),
+
+                /*ChangedLanguage(
                   text: widget.data.causes,
                   textAlign:TextAlign.justify,
                   style: TextStyle(fontSize: 16),
-                )
+                )*/
                 //Text(widget.data.causes,textAlign: TextAlign.justify,style: TextStyle(fontSize: 16),),
                 ),
             Padding(
@@ -264,7 +307,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
                   Icon(!preventionRunning ? Icons.mic_outlined : Icons.pause)
                       .onTap(() async {
                     translatedString =
-                        await changeLanguage(widget.data.preventiveMeasures);
+                        await changeLanguage1(widget.data.preventiveMeasures);
                     if (!preventionRunning) {
                       setState(() {
                         symptomsRunning = false;
@@ -286,11 +329,33 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             ),
             Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: ChangedLanguage(
+                child: FutureBuilder(
+                  future: changeLanguage1(widget.data.preventiveMeasures),
+                  builder: (context, i) => i.hasData
+                      ? Text(
+                    i.data,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0),
+                  )
+                      : Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.white,
+                      child: Card(
+                        child: SizedBox(
+                          height: height(context) * 0.014,
+                          width: width(context) * 0.25,
+                        ),
+                      )
+                  ),
+                ),
+
+
+              /*ChangedLanguage(
                   text: widget.data.preventiveMeasures,
                   textAlign:TextAlign.justify,
                   style: TextStyle(fontSize: 16),
-                )
+                )*/
                 //Text(widget.data.preventiveMeasures,textAlign: TextAlign.justify,style: TextStyle(fontSize: 16),),
                 ),
             Padding(
@@ -312,7 +377,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
                   Icon(!chemicalRunning ? Icons.mic_outlined : Icons.pause)
                       .onTap(() async {
                     translatedString =
-                        await changeLanguage(widget.data.chemicalControl);
+                        await changeLanguage1(widget.data.chemicalControl);
                     if (!chemicalRunning) {
                       setState(() {
                         symptomsRunning = false;
@@ -334,10 +399,32 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             ),
             Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: ChangedLanguage(
+                child: FutureBuilder(
+                  future: changeLanguage1(widget.data.chemicalControl),
+                  builder: (context, i) => i.hasData
+                      ? Text(
+                    i.data,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0),
+                  )
+                      : Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.white,
+                      child: Card(
+                        child: SizedBox(
+                          height: height(context) * 0.014,
+                          width: width(context) * 0.25,
+                        ),
+                      )
+                  ),
+                ),
+
+
+              /*ChangedLanguage(
                     text: widget.data.chemicalControl,
                     textAlign:TextAlign.justify,
-                    style: TextStyle(fontSize: 16))
+                    style: TextStyle(fontSize: 16))*/
                 //Text(widget.data.chemicalControl,textAlign: TextAlign.justify,style: TextStyle(fontSize: 16),),
                 ),
             Padding(
@@ -359,7 +446,7 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
                   Icon(!organicRunning ? Icons.mic_outlined : Icons.pause)
                       .onTap(() async {
                     translatedString =
-                        await changeLanguage(widget.data.organicControl);
+                        await changeLanguage1(widget.data.organicControl);
                     if (!organicRunning) {
                       setState(() {
                         symptomsRunning = false;
@@ -381,10 +468,31 @@ class _DiseaseAdvisoryDetailsState extends State<DiseaseAdvisoryDetails> {
             ),
             Padding(
                 padding: const EdgeInsets.all(10.0),
-                child: ChangedLanguage(
+                child: FutureBuilder(
+                  future: changeLanguage1(widget.data.organicControl),
+                  builder: (context, i) => i.hasData
+                      ? Text(
+                    i.data,
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 16.0),
+                  )
+                      : Shimmer.fromColors(
+                      baseColor: Colors.grey.shade300,
+                      highlightColor: Colors.white,
+                      child: Card(
+                        child: SizedBox(
+                          height: height(context) * 0.014,
+                          width: width(context) * 0.25,
+                        ),
+                      )
+                  ),
+                ),
+
+              /*ChangedLanguage(
                     text: widget.data.organicControl,
                     textAlign:TextAlign.justify,
-                    style: TextStyle(fontSize: 16))
+                    style: TextStyle(fontSize: 16))*/
                 //Text(widget.data.organicControl,textAlign: TextAlign.justify,style: TextStyle(fontSize: 16),),
                 ),
           ]),

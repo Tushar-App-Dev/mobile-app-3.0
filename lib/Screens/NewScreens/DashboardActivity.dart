@@ -1,8 +1,12 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:circle_nav_bar/circle_nav_bar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:in_app_review/in_app_review.dart';
@@ -23,12 +27,14 @@ import 'package:translator/translator.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../Authentication/LoginPageActivity.dart';
 import '../../Mandi/MandiPriceData.dart';
+import '../../Mandi/MandiPriceData1.dart';
 import '../../WebViews/CustomerSupport.dart';
 import '../../WebViews/MyWebView.dart';
 import '../../WebViews/WeatherIframe.dart';
 import '../../constants/constants.dart';
 import '../../main.dart';
 import '../CropGuideDashboard.dart';
+import '../NewDesigns/Mmc_HomePage.dart';
 import '../VideoFiles.dart';
 import '../constant/Constant.dart';
 import 'AddNewFarmsActivity.dart';
@@ -36,10 +42,11 @@ import 'ContactUsActivity.dart';
 import 'FeedbackActivity.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'FertilizerCalculaterActivity.dart';
-import 'Image_Overly.dart';
 import 'Instructions.dart';
 import 'Mmc_DashBoard.dart';
 import 'SelfProduceActivity.dart';
+import 'autocompletePlaces.dart';
+
 // int temperature,pressure;
 // Icon weatherDisplayIcon;
 // String locationName;
@@ -63,7 +70,6 @@ var currentLats = [];
 var weatherTypes = [];
 var weatherCitys = [];
 
-
 class DashboardActivity extends StatefulWidget {
   const DashboardActivity({Key key}) : super(key: key);
 
@@ -73,14 +79,21 @@ class DashboardActivity extends StatefulWidget {
 
 class _DashboardActivityState extends State<DashboardActivity> {
   GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
-  String uid, user, email, phone, api_key,selectedLanguage,currentLanguage='';
-  String urlPath =
-      "https://play.google.com/store/apps/details?id=com.mapmycrop.mmc";
-  String text = '';
-  String subject = '';
+  String uid,
+      user,
+      email,
+      phone,
+      api_key,
+      selectedLanguage,
+      currentLanguage = '',
+      imageUrl = '',
+      urlPath =
+          "https://play.google.com/store/apps/details?id=com.mapmycrop.mmc",
+      text = '',
+      subject = '';
   List<String> imagePaths = [];
   NewVersion newVersion = NewVersion();
-  var noofFarms = 0;
+  String noofFarms = '';
   var profileData;
   bool _isinstructions;
   //final plugin = FacebookLogin(debug: true);
@@ -88,23 +101,57 @@ class _DashboardActivityState extends State<DashboardActivity> {
   final _key = GlobalKey<ScaffoldState>();
   // CarouselController _carouselController = CarouselController();
   var imagesList = [
-    'assets/illustrations/1.png',
+    'assets/illustrations/Carousel0.jpeg',
+    'assets/illustrations/Carousel1.jpeg',
+    'assets/illustrations/Carousel2.jpeg',
+    'assets/illustrations/Carousel3.jpeg',
+    /* 'assets/illustrations/1.png',
     'assets/illustrations/2.png',
     'assets/illustrations/3.png',
-    'assets/illustrations/4.png',
+    'assets/illustrations/4.png',*/
     // 'https://media.istockphoto.com/photos/sunrise-strawberry-farm-landscape-agricultural-agriculture-picture-id1091940998?k=20&m=1091940998&s=612x612&w=0&h=cs6cFdycUbBph7bdpmr1bqrNaaoioETjXB_Np8MaMus=',
     /*'assets/Banners/Banner 2.png',
     'assets/Banners/Banner 1.png',
     'assets/Banners/Banner 3.png'*/
   ];
-
+List<String> quoteList = [
+  'Track your crops with the\nhelp of satellite in real\n-time, gain valuable insights',
+  'maximize your yields with\nthe power of AI and machine learning',
+  'Your route towards\nsustainable farming',
+  'Sell your produce\naccording to market rates'
+];
   int _currentIndex = 0;
   var title1, title2;
   SharedPreferences prefs;
   List<String> farmnames = [];
-  static const List<String> LanguageCodes = ['en','hi','es','fr','mr','bn','gu','ml','pa','ta','te'];
-  static const List<String> Languages = ['English','Hindi','Spanish','French','Marathi','Bengali','Gujarati','Malayalam','Punjabi','Tamil','Telugu'];
-
+  static const List<String> LanguageCodes = [
+    'en',
+    'hi',
+    'es',
+    'fr',
+    'mr',
+    'bn',
+    'gu',
+    'ml',
+    'pa',
+    'ta',
+    'te'
+  ];
+  static const List<String> Languages = [
+    'English',
+    'Hindi',
+    'Spanish',
+    'French',
+    'Marathi',
+    'Bengali',
+    'Gujarati',
+    'Malayalam',
+    'Punjabi',
+    'Tamil',
+    'Telugu'
+  ];
+  CollectionReference userProfile =
+      FirebaseFirestore.instance.collection('ProfileImages');
   List<HorizontalScroll> horizontalScroll = [
     HorizontalScroll(name: "Add farm", image: 'assets/images/Add_Farm.png'),
     HorizontalScroll(
@@ -120,13 +167,12 @@ class _DashboardActivityState extends State<DashboardActivity> {
 
   List<HorizontalScroll1> horizontalScroll1 = [
     HorizontalScroll1(
-        name: "Disease Advisory",
-        image: 'assets/illustrations/disease_detection.png'),
-    HorizontalScroll1(name: "Add Crop", image: 'assets/illustrations/farm.png'),
+        name: "Disease Advisory", image: 'assets/svgImages/Advisory.svg'),
     HorizontalScroll1(
-        name: "Scouting", image: 'assets/illustrations/scouting.png'),
+        name: "Crop Rotations", image: 'assets/svgImages/Add_Crop.svg'),
+    HorizontalScroll1(name: "Scouting", image: 'assets/svgImages/Scouting.svg'),
     HorizontalScroll1(
-        name: "Farm Planner", image: 'assets/illustrations/agriculture.png'),
+        name: "Farm Planner", image: 'assets/svgImages/Farm_Planner.svg'),
     // HorizontalScroll1(
     //     name: "Schedule a call", image: 'assets/images/Schedule.png'),
     // HorizontalScroll1(
@@ -137,9 +183,12 @@ class _DashboardActivityState extends State<DashboardActivity> {
   @override
   void initState() {
     /// newVersion change ds4 to ds5
+    ///
+
     permission();
     //getImageTitle();
     fetchFarmsData();
+    // getGlobalCropList();
     showNotification();
     initPlatformState();
 
@@ -194,6 +243,72 @@ class _DashboardActivityState extends State<DashboardActivity> {
     super.initState();
   }
 
+  /*getGlobalCropList(String api_key) async {
+
+    print(api_key);
+    List<String> temp = prefs.getStringList('translatedCropList')??[];
+    if(temp.isEmpty||temp.last!=prefs.getString('language')){
+      print('entered if in getGlobalCropLIst');
+      globalCropList.clear();
+      globalCropListTranslated.clear();
+      var response = await http
+          .get(Uri.parse("https://api.mapmycrop.com/crop?api_key=$api_key"));
+      var cropData = jsonDecode(response.body);
+      print(cropData);
+      for (int i = 0; i < cropData.length; i++) {
+        //var translatedCrop = );
+
+        globalCropList.add(cropData[i]['name']);
+
+        //  });
+        var temp = await changeLanguage(cropData[i]['name']);
+        globalCropListTranslated.add(temp);
+        print('temp is ${cropData[i]['name']} and translated is $temp');
+        //print(await changeLanguage(cropData[i]['name']));
+      }
+      globalCropListTranslated.add(prefs.getString('language'));
+
+      // prefs.setStringList('globaltranslatedCropList',globalCropListTranslated);
+      prefs.setStringList('cropList', globalCropList);
+      prefs.setStringList('translatedCropList', globalCropListTranslated);
+      print('global croplist added');
+    }else{
+      print('entered else in getGlobalCropLIst');
+      setState(() {
+        globalCropList = prefs.getStringList('cropList');
+        globalCropListTranslated = prefs.getStringList('translatedCropList');
+      });
+    }
+
+    //globalCropList
+  }*/
+
+
+  Future<bool> internetConnection() async {
+    try {
+      final result = await InternetAddress.lookup('example.com');
+      if (result.isNotEmpty && result[0].rawAddress.isNotEmpty) {
+        if (farmnames.isNotEmpty &&
+            currentPressures.isNotEmpty &&
+            currentHumiditys.isNotEmpty &&
+            currentWinds.isNotEmpty) {
+        } else {
+          // getWeatherData();
+        }
+        if (noofFarms == '' && noofFarms == 'null') {
+          // fetchFarmsData();
+        }
+
+        // prefs?.setString('cropList', cropList.toString());
+       // print('connected');
+        return true;
+      }
+    } on SocketException catch (_) {
+      print('not connected');
+      return false;
+    }
+  }
+
   permission() async {
     if (await Permission.location.isGranted != true) {
       Permission.location.request();
@@ -227,36 +342,76 @@ class _DashboardActivityState extends State<DashboardActivity> {
   }
 
   void fetchFarmsData() async {
-    var data, dataValue;
-     prefs = await SharedPreferences.getInstance();
+    var data;
+    prefs = await SharedPreferences.getInstance();
     api_key = prefs.getString('api_key');
     //selectedLanguage=prefs.getString('language');
-    _isinstructions=prefs.getBool("instructions");
+    _isinstructions = prefs.getBool("instructions");
+
     print('api key is   $api_key');
+    FirebaseAnalytics.instance
+        .logEvent(
+          name: "app_visit",
+          parameters: {
+            "content_type": "Activity_planned",
+            "api_key": api_key,
+          },
+        )
+        .then((value) => print('succeeeed'))
+        .onError((error, stackTrace) => print('analytics error is $error'));
+
+    /*FirebaseAnalytics.instance.logEvent(
+    name: 'test_event',
+    parameters: <String, dynamic>{
+    'string': 'string',
+    'int': 42,
+    'long': 12345678910,
+    'double': 42.0,
+    // Only strings and numbers (ints & doubles) are supported for GA custom event parameters:
+    // https://developers.google.com/analytics/devguides/collection/analyticsjs/custom-dims-mets#overview
+    'bool': true.toString(),
+    },
+    );*/
     var response = await http
         .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     data = jsonDecode(response.body);
+    // print(response.body);
 
     setState(() {
-      currentLanguage = Languages[LanguageCodes.indexOf(prefs.getString('language'))];
-      noofFarms = data['features'].length;
+      imageUrl = prefs.getString('profileImage') ?? '';
+
+      currentLanguage =
+          Languages[LanguageCodes.indexOf(prefs.getString('language'))];
+      noofFarms = data.length.toString();
     });
+    if (imageUrl.isEmpty) {
+      if (imageUrl.isEmpty) {
+        var result = await userProfile.doc(api_key).get();
+        print(result.data());
+        if (result.data() != null) {
+          setState(() {
+            imageUrl = result['profileImage'];
+          });
+        }
+      }
+    }
     farmnames.clear();
 
-    for (int i = 0; i < data['features'].length; i++) {
+    for (int i = 0; i < data.length; i++) {
       setState(() {
-        farmnames.add(data['features'][i]['properties']['name']);
+        farmnames.add(data[i]['name']);
       });
     }
     //print(farmnames);
 
-    var response1 = await http.get(
-        Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
+    var response1 = await http
+        .get(Uri.parse('https://api.mapmycrop.com/profile/?api_key=$api_key'));
     profileData = jsonDecode(response1.body);
     setState(() {
       email = profileData['email'];
       phone = profileData['phone'];
     });
+
   }
 
   _checkVersion() async {
@@ -290,8 +445,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
     }
   }
 
-
-  int temperature,pressure;
+  var temperature, pressure;
   Icon weatherDisplayIcon;
   String locationName;
   AssetImage backgroundImage;
@@ -308,16 +462,18 @@ class _DashboardActivityState extends State<DashboardActivity> {
 //    print(weatherData.currentTemperature);
     print('updateDisplayInfo ');
     setState(() {
-      temperature = weatherData.currentTemperature??0.000000.round();
-      WeatherDisplayData weatherDisplayData = weatherData.getWeatherDisplayData();
+      temperature = weatherData.currentTemperature ?? 0.000000.round();
+      WeatherDisplayData weatherDisplayData =
+          weatherData.getWeatherDisplayData();
 
-      backgroundImage = weatherDisplayData.weatherImage??AssetImage('assets/new_images.back.png');
-      weatherDisplayIcon = weatherDisplayData.weatherIcon??Icon(Icons.sunny);
+      backgroundImage = weatherDisplayData.weatherImage ??
+          AssetImage('assets/new_images.back.png');
+      weatherDisplayIcon = weatherDisplayData.weatherIcon ?? Icon(Icons.sunny);
       locationName = weatherData.currentLocation;
       locdata = weatherData.currentDescription;
       humidity = weatherData.currentHumidity;
       date = weatherData.currentDate;
-      pressure=weatherData.currentPressure;
+      pressure = weatherData.currentPressure;
       //dt = DateTime.fromMicrosecondsSinceEpoch(date);
       wind = weatherData.currentWind;
       if (weatherData.weatherType == 'Clear') {
@@ -332,6 +488,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
         bgImg = 'assets/images/sunny.jpg';
       }
     });
+    // print('here');
     print('''
     $temperature
     $backgroundImage
@@ -365,14 +522,13 @@ class _DashboardActivityState extends State<DashboardActivity> {
     // Fetch the current weather
     WeatherData weatherData = await WeatherData(locationData: _locationHelper);
     await weatherData.getCurrentTemperature();
-    if (weatherData.currentTemperature == null &&
-        weatherData.currentCondition == null ) {
-
+    if (weatherData.currentTemperature != null &&
+        weatherData.currentCondition != null) {
+      updateDisplayInfo(weatherData);
       // todo: Handle no weather
     }
-    updateDisplayInfo(weatherData);
-    //Get.to(()=>MainScreen(weatherData: weatherData,));
 
+    //Get.to(()=>MainScreen(weatherData: weatherData,));
   }
 
   @override
@@ -380,7 +536,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
     final screenHeight = height(context);
     return Scaffold(
       key: scaffoldKey,
-      backgroundColor: Colors.grey.shade200,
+      backgroundColor: Colors.white,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.black),
         key: _key,
@@ -402,6 +558,14 @@ class _DashboardActivityState extends State<DashboardActivity> {
             // const SizedBox(width: 10),
             GestureDetector(
               onTap: () {
+                FirebaseAnalytics.instance.logEvent(
+                  name: "user_profile",
+                  parameters: {
+                    "content_type": "Activity_planned",
+                    "api_key": api_key,
+                  },
+                ).onError(
+                    (error, stackTrace) => print('analytics error is $error'));
                 Navigator.of(context).push(MaterialPageRoute(
                     builder: (_) =>
                         userProfileActivity())); //user:user,usercred:email
@@ -417,598 +581,1970 @@ class _DashboardActivityState extends State<DashboardActivity> {
                   //   fit: BoxFit.fitHeight,
                   // ),
                 ),
-                child: Icon(
+                child: /*imageUrl==null||imageUrl == ''?Icon(
                   Icons.account_circle_sharp,
                   color: Colors.black87,
                   size: 30,
+                ):*/
+                    Container(
+                  height: 30,
+                  width: 30,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(width: 2, color: Colors.orange),
+                    image: DecorationImage(
+                        image: imageUrl == "" || imageUrl == null
+                            ? AssetImage('assets/new_images/logo.png')
+                            : NetworkImage(imageUrl),
+                        fit: BoxFit
+                            .fill), //CachedNetworkImageProvider('https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTD8u1Nmrk78DSX0v2i_wTgS6tW5yvHSD7o6g&usqp=CAU')),
+                  ),
                 ),
               ),
             ),
           ],
         ),
       ),
-      body: ListView(
+      body: Stack(
+        alignment: Alignment.topCenter,
         children: [
-          CarouselSlider(
-            options: CarouselOptions(
-              viewportFraction: 1,
-              height: height(context) * 0.2,
-              autoPlay: true,
-              enlargeCenterPage: true,
-              scrollDirection: Axis.horizontal,
-              onPageChanged: (index, reason) {
-                setState(
-                  () {
-                    _currentIndex = index;
-                    //getImageTitle();
-                  },
-                );
-              },
-            ),
-            items: imagesList
-                .map(
-                  (item) => Padding(
-                    padding: const EdgeInsets.all(4.0),
-                    child: Card(
-                      margin: EdgeInsets.only(
-                        top: 10.0,
-                        bottom: 10.0,
-                      ),
-                      elevation: 1.0,
-                      shadowColor: Colors.grey,
-                      // shape: RoundedRectangleBorder(
-                      //   borderRadius: BorderRadius.circular(10.0),
-                      // ),
-                      child: Stack(alignment: Alignment.topCenter, children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(10.0),
-                          ),
-                          child: Image.asset(
-                            item,
-                            fit: BoxFit.fill,
-                            width: double.infinity,
-                          ),
-                        ),
-                        // Padding(
-                        //   padding: const EdgeInsets.symmetric(vertical: 20.0),
-                        //   child: Text(title1,style: TextStyle(fontWeight: FontWeight.w600),),
-                        // ),
-                        // Padding(
-                        //   padding: const EdgeInsets.symmetric(vertical: 40.0),
-                        //   child: Text(title2,style: TextStyle(fontWeight: FontWeight.w600),),
-                        // )
-                      ]),
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          Center(
-            child: Container(
-              width: width(context) * 0.2,
-              height: height(context) * 0.01,
-              child: ListView.builder(
-                  physics: ScrollPhysics(),
-                  itemCount: imagesList.length,
+          ListView(
+            children: [
+
+              CarouselSlider(
+                options: CarouselOptions(
+                  viewportFraction: 0.95,
+                  height: height(context) * 0.22,
+                  autoPlay: true,
+                  enlargeCenterPage: true,
                   scrollDirection: Axis.horizontal,
-                  itemBuilder: (context, i) {
-                    return Container(
-                      margin: EdgeInsets.symmetric(horizontal: 3),
-                      height: height(context) * 0.01,
-                      width: i == _currentIndex ? 20 : 10,
-                      decoration: BoxDecoration(
-                          border: Border.all(width: 1, color: Colors.grey),
-                          color:
-                          i == _currentIndex ? Colors.black : Colors.white,
-                          borderRadius:
-                          BorderRadius.circular(height(context) * 0.005)),
-                    );
-                  }),
-            ),
-          ),
-          farmnames.isNotEmpty&&currentPressures.isNotEmpty?CarouselSlider(
-            options: CarouselOptions(
-              aspectRatio: 21/9,
-              viewportFraction: 1,
-              //height: height(context) * 0.23,
-              autoPlay: false,
-              //enlargeCenterPage: true,
-              scrollDirection: Axis.horizontal,
-              onPageChanged: (index, reason) {
-                // setState(
-                //   () {
-                //     _currentIndex = index;
-                //     //getImageTitle();
-                //   },
-               // );
-              },
-            ),
-            items: farmnames
-                .map(
-                  (item) {
-                  //  print(farmnames);
-                    var index = farmnames.indexOf(item);
-                   // print(index);
-                    return Card(
-                        elevation: 1,
-                        child: Container(
-                          padding: EdgeInsets.all(8),
-                          margin: EdgeInsets.symmetric(horizontal:5,),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20.0),
-                            // image: new DecorationImage(
-                            //   image: new AssetImage(bgImg),
-                            //   fit: BoxFit.fill,
-                            //   colorFilter: ColorFilter.mode(
-                            //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
-                            // ),s
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     blurRadius: 4.0,
-                            //     color: Colors.grey,
-                            //   ) //spreadRadius: 2.0
-                            // ]
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              ChangedLanguage(text:'Currrent Weather',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.w700,fontSize:17),),
-                              SizedBox(height: 10,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(farmnames.isNotEmpty?farmnames[index]:currentLocations[index],style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.bold),),
-                                      SizedBox(height: 10,),
-                                      Row(
-                                        children: [
-                                          //Image.asset(currentIcons.length>index?currentIcons[index]:"assets/new_images/back.png",height:50,width:70,fit: BoxFit.fill,),
-                                          //Text('"\"${currentIcons.length>index?currentIcons[index]:''}'),
-                                          //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                          // ?? Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                          Image.network('http://openweathermap.org/img/w/${currentIcons.length>index?currentIcons[index]:""}.png',height:60,width:70,fit: BoxFit.fill,),
-                                          /*SizedBox(width:10,),*/
-                                          ChangedLanguage(text:currentTemperatures.length>index?'${currentTemperatures[index]}\u2103':'',style: TextStyle(fontSize:25,color: Colors.blueGrey),)
-                                        ],
-                                      ),
-                                     // SizedBox(height:10,),
-                                      SizedBox(width:width(context)*0.35,child: ChangedLanguage(text:currentDescriptions.length>index?currentDescriptions[index]??'':'',style: TextStyle(color: Colors.blueGrey),))
-                                    ],
-                                  ),
-                                  SizedBox(width:width(context)*0.1,),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
-                                        // Row(
-                                        //   children: [
-                                        //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
-                                        //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
-                                        //     SizedBox(width: 20,),
-                                        //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
-                                        //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
-                                        //   ],
-                                        // ),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(Icons.water_drop,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Humidity',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text('${currentHumiditys.length>index?currentHumiditys[index]??'':''}%',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                        SizedBox(height: 10,),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(FontAwesomeIcons.wind,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Wind',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text('${currentWinds.length>index?currentHumiditys[index]??'':''}kph',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                        SizedBox(height: 10,),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(Icons.compress,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Pressure',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text('${currentPressures.length>index?currentHumiditys[index]??'':''}hPa',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              )
-                            ],
-                          ),
-                        )
-                            /*Container(
-                          padding: EdgeInsets.all(15),
-                          margin: EdgeInsets.symmetric(horizontal:5,vertical: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(20.0),
-                            // image: new DecorationImage(
-                            //   image: new AssetImage(bgImg),
-                            //   fit: BoxFit.fill,
-                            //   colorFilter: ColorFilter.mode(
-                            //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
-                            // ),s
-                            // boxShadow: [
-                            //   BoxShadow(
-                            //     blurRadius: 4.0,
-                            //     color: Colors.grey,
-                            //   ) //spreadRadius: 2.0
-                            // ]
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                            children: [
-                              ChangedLanguage(text:'Currrent Weather',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.w700,fontSize:17),),
-                              SizedBox(height: 10,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text('',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.bold),),
-                                      SizedBox(height: 10,),
-                                      Row(
-                                        children: [
-                                          //Image.asset('assets/images/temperature.png',height:50,width:70,fit: BoxFit.fill,),
-                                          //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                          Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                          SizedBox(width:10,),
-                                          Text('\u2103',style: TextStyle(fontSize:25,color: Colors.blueGrey),)
-                                        ],
-                                      ),
-                                      SizedBox(height:10,),
-                                      Text('',style: TextStyle(color: Colors.blueGrey),)
-                                    ],
-                                  ),
-                                  SizedBox(width:width(context)*0.15,),
-                                  Expanded(
-                                    child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
-                                        // Row(
-                                        //   children: [
-                                        //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
-                                        //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
-                                        //     SizedBox(width: 20,),
-                                        //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
-                                        //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
-                                        //   ],
-                                        // ),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(Icons.water_drop,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Humidity',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text(' %',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                        SizedBox(height: 10,),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(FontAwesomeIcons.wind,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Wind',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text(' kph',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                        SizedBox(height: 10,),
-                                        Row(
-                                          //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                          children: [
-                                            Icon(Icons.compress,color: Colors.blueGrey),
-                                            SizedBox(width: 10,),
-                                            ChangedLanguage(text:'Pressure',style: TextStyle(color: Colors.blueGrey),),
-                                            SizedBox(width: 10,),
-                                            Text(' hPa',style: TextStyle(color: Colors.blue),)
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              )
-                            ],
-                          ),
-                        )*/
+                  onPageChanged: (index, reason) {
+                    setState(
+                      () {
+                        _currentIndex = index;
+                        //getImageTitle();
+                      },
                     );
                   },
-                )
-                .toList(),
-          ):Card(
-              elevation: 1,
-              child: Container(
-                padding: EdgeInsets.all(15),
-                margin: EdgeInsets.symmetric(horizontal:5,vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  // image: new DecorationImage(
-                  //   image: new AssetImage(bgImg),
-                  //   fit: BoxFit.fill,
-                  //   colorFilter: ColorFilter.mode(
-                  //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
-                  // ),s
-                  // boxShadow: [
-                  //   BoxShadow(
-                  //     blurRadius: 4.0,
-                  //     color: Colors.grey,
-                  //   ) //spreadRadius: 2.0
-                  // ]
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ChangedLanguage(text:'Currrent Weather',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.w700,fontSize:17),),
-                    SizedBox(height: 10,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                items: imagesList
+                    .map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.all(4.0),
+                        child: Stack(
                           children: [
-                            Text(locationName??'',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.bold),),
-                            SizedBox(height: 10,),
-                            Row(
-                              children: [
-                                //Image.asset('assets/images/temperature.png',height:50,width:70,fit: BoxFit.fill,),
-                                //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                weatherDisplayIcon!=null?weatherDisplayIcon:Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                SizedBox(width:10,),
-                                ChangedLanguage(text:temperature!=null?'${temperature}\u2103':'',style: TextStyle(fontSize:25,color: Colors.blueGrey),)
-                              ],
+                            Card(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10)
+                              ),
+                              margin: EdgeInsets.only(
+                                top: 10.0,
+                                bottom: 10.0,
+                              ),
+                              elevation: 1.0,
+                              //   shadowColor: Colors.grey,
+                              // shape: RoundedRectangleBorder(
+                              //   borderRadius: BorderRadius.circular(10.0),
+                              // ),
+                              child:
+                                  Stack(alignment: Alignment.topCenter, children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10.0),
+                                  ),
+                                  child: Image.asset(
+                                    item,
+                                    // cacheColorFilter:true,
+                                    fit: BoxFit.fill,
+                                    width: double.infinity,
+                                  ),
+                                ),
+                                // Padding(
+                                //   padding: const EdgeInsets.symmetric(vertical: 20.0),
+                                //   child: Text(title1,style: TextStyle(fontWeight: FontWeight.w600),),
+                                // ),
+                                // Padding(
+                                //   padding: const EdgeInsets.symmetric(vertical: 40.0),
+                                //   child: Text(title2,style: TextStyle(fontWeight: FontWeight.w600),),
+                                // )
+                              ]),
                             ),
-                            SizedBox(height:10,),
-                            ChangedLanguage(text:locdata!=null?locdata:'',style: TextStyle(color: Colors.blueGrey),)
+                            Positioned(
+                                bottom: height(context)*0.02,
+                                left:height(context)*0.02,
+                                child: languageText(quoteList[imagesList.indexOf(item)], TextStyle(color: white,fontWeight: FontWeight.w600,),))
                           ],
                         ),
-                        SizedBox(width:width(context)*0.15,),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
-                              // Row(
-                              //   children: [
-                              //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
-                              //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
-                              //     SizedBox(width: 20,),
-                              //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
-                              //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
-                              //   ],
-                              // ),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      ),
+                    )
+                    .toList(),
+              ),
+              Center(
+                child: Container(
+                  width: width(context) * 0.2,
+                  height: height(context) * 0.01,
+                  child: ListView.builder(
+                      physics: ScrollPhysics(),
+                      itemCount: imagesList.length,
+                      scrollDirection: Axis.horizontal,
+                      itemBuilder: (context, i) {
+                        return Container(
+                          margin: EdgeInsets.symmetric(horizontal: 3),
+                          height: height(context) * 0.01,
+                          width: i == _currentIndex ? 20 : 10,
+                          decoration: BoxDecoration(
+                              border: Border.all(
+                                  width: 1, color: Color(0xff4e6703)),
+                              color: i == _currentIndex
+                                  ? Color(0xff4e6703)
+                                  : Colors.white,
+                              borderRadius: BorderRadius.circular(
+                                  height(context) * 0.005)),
+                        );
+                      }),
+                ),
+              ),
+              farmnames.isNotEmpty &&
+                      currentPressures.isNotEmpty &&
+                      currentHumiditys.isNotEmpty &&
+                      currentWinds.isNotEmpty
+                  ? CarouselSlider(
+                      options: CarouselOptions(
+                        aspectRatio: 21 / 11,
+                        viewportFraction: 0.95,
+                        //height: height(context) * 0.23,
+                        autoPlay: false,
+                        //enlargeCenterPage: true,
+                        scrollDirection: Axis.horizontal,
+                        onPageChanged: (index, reason) {
+                          // setState(
+                          //   () {
+                          //     _currentIndex = index;
+                          //     //getImageTitle();
+                          //   },
+                          // );
+                        },
+                      ),
+                      items: farmnames.map(
+                        (item) {
+                          //  print(farmnames);
+                          var index = farmnames.indexOf(item);
+                          // print(index);
+                          return Container(
+                            padding: EdgeInsets.symmetric(vertical:8,horizontal: 12),
+                            margin: EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 20
+                            ),
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                color: Colors.white,
+                              border: Border.all(
+                                  color: Colors.grey.shade300, width: 1),
+                              boxShadow: [
+                                BoxShadow(
+                                    blurRadius: 12,
+                                    spreadRadius: 0,
+                                    color: Colors.grey.shade200)
+                              ],
+                              //borderRadius: BorderRadius.circular(10),
+                              /*image: DecorationImage(
+                            //opacity: 0.8,
+                            //image: SvgPicture.asset('assets/illustrations/FertilizerRecommendation.jpg'),
+                            fit: BoxFit.fill,
+                            colorFilter: ColorFilter.mode(
+                                Colors.black.withOpacity(0.82), BlendMode.dstATop),
+                          )*/
+                            ),
+
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              // mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                ChangedLanguage(
+                                  text: 'Current Weather',
+                                  style: TextStyle(
+                                      color: Colors.blueGrey,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 17),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          farmnames.isNotEmpty
+                                              ? farmnames[index]
+                                              : currentLocations[index],
+                                          style: TextStyle(
+                                              color: Colors.blueGrey,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Row(
+                                          children: [
+                                            //Image.asset(currentIcons.length>index?currentIcons[index]:"assets/new_images/back.png",height:50,width:70,fit: BoxFit.fill,),
+                                            //Text('"\"${currentIcons.length>index?currentIcons[index]:''}'),
+                                            //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
+                                            // ?? Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
+                                            /*Image.network(
+                                              'http://openweathermap.org/img/w/${currentIcons.length > index ? currentIcons[index] : ""}.png',*/
+                                            SvgPicture.asset(
+                                                        "assets/svgImages/${currentIcons.length > index ? currentIcons[index].toString().substring(0, 2) + "d.svg" : ""}",
+                                                        height: 60,
+                                                        width: 70,
+                                                        fit: BoxFit.fill,
+                                                      )
+                                                ,
+                                            /*SizedBox(width:10,),*/
+                                            ChangedLanguage(
+                                              text: currentTemperatures
+                                                          .length >
+                                                      index
+                                                  ? '${currentTemperatures[index]}\u2103'
+                                                  : '',
+                                              style: TextStyle(
+                                                  fontSize: 25,
+                                                  color: Colors.blueGrey),
+                                            )
+                                          ],
+                                        ),
+                                        // SizedBox(height:10,),
+                                        SizedBox(
+                                            width: width(context) * 0.35,
+                                            child: ChangedLanguage(
+                                              text: currentDescriptions
+                                                          .length >
+                                                      index
+                                                  ? currentDescriptions[
+                                                          index] ??
+                                                      ''
+                                                  : '',
+                                              style: TextStyle(
+                                                  color: Colors.blueGrey),
+                                            ))
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      width: width(context) * 0.1,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
+                                          // Row(
+                                          //   children: [
+                                          //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
+                                          //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
+                                          //     SizedBox(width: 20,),
+                                          //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
+                                          //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
+                                          //   ],
+                                          // ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(Icons.water_drop,
+                                                  color: Colors.blueGrey,
+                                                  size: 15),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Humidity',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${currentHumiditys.length > index ? currentHumiditys[index] ?? '' : ''}%',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(
+                                                FontAwesomeIcons.wind,
+                                                color: Colors.blueGrey,
+                                                size: 15,
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Wind',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${currentWinds.length > index ? currentWinds[index] ?? '' : ''}kph',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(Icons.compress,
+                                                  color: Colors.blueGrey,
+                                                  size: 17),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Pressure',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${currentPressures.length > index ? currentPressures[index] ?? '' : ''}hPa',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          );
+                        },
+                      ).toList(),
+                    )
+                  : noofFarms == 0
+                      ? Card(
+                          elevation: 1,
+                          child: Container(
+                            padding: EdgeInsets.all(15),
+                            margin: EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20.0),
+                              // image: new DecorationImage(
+                              //   image: new AssetImage(bgImg),
+                              //   fit: BoxFit.fill,
+                              //   colorFilter: ColorFilter.mode(
+                              //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
+                              // ),s
+                              // boxShadow: [
+                              //   BoxShadow(
+                              //     blurRadius: 4.0,
+                              //     color: Colors.grey,
+                              //   ) //spreadRadius: 2.0
+                              // ]
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              // mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                ChangedLanguage(
+                                  text: 'Currrent Weather',
+                                  style: TextStyle(
+                                      color: Colors.blueGrey,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 17),
+                                ),
+                                SizedBox(
+                                  height: 10,
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          locationName ?? '',
+                                          style: TextStyle(
+                                              color: Colors.blueGrey,
+                                              fontWeight: FontWeight.bold),
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        Row(
+                                          children: [
+                                            //Image.asset('assets/images/temperature.png',height:50,width:70,fit: BoxFit.fill,),
+                                            //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
+                                            weatherDisplayIcon != null
+                                                ? weatherDisplayIcon
+                                                : Icon(
+                                                    Icons.sunny,
+                                                    color: Colors.orangeAccent,
+                                                    size: 50,
+                                                  ),
+                                            SizedBox(
+                                              width: 10,
+                                            ),
+                                            Text(
+                                              temperature != null
+                                                  ? '${temperature}\u2103'
+                                                  : '',
+                                              style: TextStyle(
+                                                  fontSize: 25,
+                                                  color: Colors.blueGrey),
+                                            )
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: 10,
+                                        ),
+                                        ChangedLanguage(
+                                          text: locdata != null ? locdata : '',
+                                          style:
+                                              TextStyle(color: Colors.blueGrey),
+                                        )
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      width: width(context) * 0.15,
+                                    ),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
+                                          // Row(
+                                          //   children: [
+                                          //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
+                                          //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
+                                          //     SizedBox(width: 20,),
+                                          //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
+                                          //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
+                                          //   ],
+                                          // ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(Icons.water_drop,
+                                                  color: Colors.blueGrey),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Humidity',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${humidity ?? ''}%',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(FontAwesomeIcons.wind,
+                                                  color: Colors.blueGrey),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Wind',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${wind ?? ''}kph',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                          SizedBox(
+                                            height: 10,
+                                          ),
+                                          Row(
+                                            //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Icon(Icons.compress,
+                                                  color: Colors.blueGrey),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              ChangedLanguage(
+                                                text: 'Pressure',
+                                                style: TextStyle(
+                                                    color: Colors.blueGrey),
+                                              ),
+                                              SizedBox(
+                                                width: 10,
+                                              ),
+                                              Text(
+                                                '${pressure ?? ''}hPa',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              )
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                  ],
+                                )
+                              ],
+                            ),
+                          ))
+                      : SizedBox(),
+
+              /*:Container(
+                    padding: EdgeInsets.all(15),
+                    margin: EdgeInsets.symmetric(horizontal:5,vertical: 5),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20.0),
+                      // image: new DecorationImage(
+                      //   image: new AssetImage(bgImg),
+                      //   fit: BoxFit.fill,
+                      //   colorFilter: ColorFilter.mode(
+                      //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
+                      // ),s
+                      // boxShadow: [
+                      //   BoxShadow(
+                      //     blurRadius: 4.0,
+                      //     color: Colors.grey,
+                      //   ) //spreadRadius: 2.0
+                      // ]
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        ChangedLanguage(text:'Currrent Weather',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.w700,fontSize:17),),
+                        SizedBox(height: 10,),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.bold),),
+                                SizedBox(height: 10,),
+                                Row(
+                                  children: [
+                                    //Image.asset('assets/images/temperature.png',height:50,width:70,fit: BoxFit.fill,),
+                                    //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
+                                    Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
+                                    SizedBox(width:10,),
+                                    Text('\u2103',style: TextStyle(fontSize:25,color: Colors.blueGrey),)
+                                  ],
+                                ),
+                                SizedBox(height:10,),
+                                Text('',style: TextStyle(color: Colors.blueGrey),)
+                              ],
+                            ),
+                            SizedBox(width:width(context)*0.15,),
+                            Expanded(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Icon(Icons.water_drop,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Humidity',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text('${humidity}%',style: TextStyle(color: Colors.blue),)
+                                  //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
+                                  // Row(
+                                  //   children: [
+                                  //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
+                                  //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
+                                  //     SizedBox(width: 20,),
+                                  //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
+                                  //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
+                                  //   ],
+                                  // ),
+                                  Row(
+                                    //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Icon(Icons.water_drop,color: Colors.blueGrey),
+                                      SizedBox(width: 10,),
+                                      ChangedLanguage(text:'Humidity',style: TextStyle(color: Colors.blueGrey),),
+                                      SizedBox(width: 10,),
+                                      Text(' %',style: TextStyle(color: Colors.blue),)
+                                    ],
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Row(
+                                    //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Icon(FontAwesomeIcons.wind,color: Colors.blueGrey),
+                                      SizedBox(width: 10,),
+                                      ChangedLanguage(text:'Wind',style: TextStyle(color: Colors.blueGrey),),
+                                      SizedBox(width: 10,),
+                                      Text(' kph',style: TextStyle(color: Colors.blue),)
+                                    ],
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Row(
+                                    //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                    children: [
+                                      Icon(Icons.compress,color: Colors.blueGrey),
+                                      SizedBox(width: 10,),
+                                      ChangedLanguage(text:'Pressure',style: TextStyle(color: Colors.blueGrey),),
+                                      SizedBox(width: 10,),
+                                      Text(' hPa',style: TextStyle(color: Colors.blue),)
+                                    ],
+                                  ),
                                 ],
                               ),
-                              SizedBox(height: 10,),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(FontAwesomeIcons.wind,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Wind',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text('${wind}kph',style: TextStyle(color: Colors.blue),)
-                                ],
+                            )
+                          ],
+                        )
+                      ],
+                    ),
+                  )*/
+              /*
+                      )*/ //SizedBox(),
+
+              SizedBox(
+                height: 10,
+              ),
+
+              Container(
+                margin: const EdgeInsets.only(top: 15),
+                padding:
+                    EdgeInsets.symmetric(horizontal: width(context) * 0.05),
+                child: Column(
+                  children: [
+                    /*Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text("Agronomist's Advice",
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        InkWell(
+                          onTap: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ExpertCall(
+                                        user: user, email: email, phone: phone)));
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 15, vertical: 5),
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(30)),
+                            child: const Center(
+                              child: Icon(
+                                Icons.phone,
+                                color: Color(0xffECB34F),
+                                size: 18,
                               ),
-                              SizedBox(height: 10,),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(Icons.compress,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Pressure',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text('${pressure}hPa',style: TextStyle(color: Colors.blue),)
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
                         )
                       ],
-                    )
-                  ],
-                ),
-              )/*:Container(
-                padding: EdgeInsets.all(15),
-                margin: EdgeInsets.symmetric(horizontal:5,vertical: 5),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20.0),
-                  // image: new DecorationImage(
-                  //   image: new AssetImage(bgImg),
-                  //   fit: BoxFit.fill,
-                  //   colorFilter: ColorFilter.mode(
-                  //       Colors.black.withOpacity(0.90), BlendMode.dstATop),
-                  // ),s
-                  // boxShadow: [
-                  //   BoxShadow(
-                  //     blurRadius: 4.0,
-                  //     color: Colors.grey,
-                  //   ) //spreadRadius: 2.0
-                  // ]
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  // mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    ChangedLanguage(text:'Currrent Weather',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.w700,fontSize:17),),
-                    SizedBox(height: 10,),
+                    ),
+                    const SizedBox(
+                      height: 12,
+                    ),*/
+                    Row(
+                      children: [
+                        Flexible(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () {
+                              print(_isinstructions);
+                              _isinstructions != true
+                                  ? Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              DrawGuideActivity()))
+                                  : Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) =>
+                                              AddNewFarmsActivity()));
+                              FirebaseAnalytics.instance.logEvent(
+                                name: "add_farm",
+                                parameters: {
+                                  "content_type": "Activity_planned",
+                                  "api_key": api_key,
+                                },
+                              ).onError((error, stackTrace) =>
+                                  print('analytics error is $error'));
+                            },
+                            child: Container(
+                              height: height(context) * 0.18,
+                              width: width(context) * 0.45,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                      blurRadius: 12,
+                                      spreadRadius: 0,
+                                      color: Colors.grey.shade200)
+                                ],
+                                border: Border.all(
+                                    color: Colors.grey.shade400, width: 1),
+                              ),
+                              child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Stack(
+                                      alignment: Alignment.topRight,
+                                      children: [
+                                        Container(
+                                          padding: EdgeInsets.all(2),
+                                          height: height(context) * 0.12,
+                                          width: height(context) * 0.12,
+                                          decoration: BoxDecoration(
+                                              //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      height(context) * 0.07),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                    blurRadius: 12,
+                                                    spreadRadius: 0,
+                                                    color: Colors.grey.shade200)
+                                              ]
+                                              //color: Colors.black,//Color(color),
+
+                                              /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                              ),
+                                          /* child: Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                          child: Center(
+                                              child: SvgPicture.asset(
+                                                  'assets/svgImages/Add_Farm.svg')),
+                                        ),
+                                        Positioned(
+                                            right: 5,
+                                            top: 5,
+                                            child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  color: Colors.white,
+                                                ),
+                                                child: Icon(
+                                                    Icons.add_circle_outline,
+                                                    color: Color(0xffeb3a0f))))
+                                      ],
+                                    ),
+                                    // SizedBox(height: 10),
+                                    FutureBuilder(
+                                      future: changeLanguage("Add Farm"),
+                                      builder: (context, i) => i.hasData
+                                          ? Text(
+                                              i.data,
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: 16.0),
+                                            )
+                                          : Shimmer.fromColors(
+                                              baseColor: Colors.grey.shade300,
+                                              highlightColor: Colors.white,
+                                              child: Card(
+                                                child: SizedBox(
+                                                  height:
+                                                      height(context) * 0.014,
+                                                  width: width(context) * 0.25,
+                                                ),
+                                              )),
+                                    )
+                                    /*ChangedLanguage(text:horizontalScroll1[index].name,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  )),*/
+                                  ]),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 10,
+                        ),
+                        Flexible(
+                          flex: 1,
+                          child: GestureDetector(
+                            onTap: () async {
+                              noofFarms != '0'
+                                  ? Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                          builder: (context) => MyWebView(
+                                                api_key: api_key,
+                                              )))
+                                  : QuickAlert.show(
+                                      context: context,
+                                      type: QuickAlertType.info,
+                                      title:
+                                          await changeLanguage('Information'),
+                                      text: await changeLanguage(
+                                          'Please add your farm first...'),
+                                    );
+                              FirebaseAnalytics.instance.logEvent(
+                                name: "farm_monitoring",
+                                parameters: {
+                                  "content_type": "Activity_planned",
+                                  "api_key": api_key,
+                                },
+                              ).onError((error, stackTrace) =>
+                                  print('analytics error is $error'));
+                            },
+                            child: Container(
+                              height: height(context) * 0.18,
+                              width: width(context) * 0.45,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: [
+                                  BoxShadow(
+                                      blurRadius: 12,
+                                      spreadRadius: 0,
+                                      color: Colors.grey.shade200)
+                                ],
+                                border: Border.all(
+                                    color: Colors.grey.shade400, width: 1),
+                              ),
+                              child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      padding: EdgeInsets.all(2),
+                                      height: height(context) * 0.12,
+                                      width: height(context) * 0.12,
+                                      decoration: BoxDecoration(
+                                          //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                          borderRadius: BorderRadius.circular(
+                                              height(context) * 0.07),
+                                          boxShadow: [
+                                            BoxShadow(
+                                                blurRadius: 12,
+                                                spreadRadius: 0,
+                                                color: Colors.grey.shade200)
+                                          ]
+                                          //color: Colors.black,//Color(color),
+
+                                          /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                          ),
+                                      /* child: Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                      child: Center(
+                                          child: SvgPicture.asset(
+                                              'assets/svgImages/Monitoring.svg')),
+                                    ),
+                                    // SizedBox(height: 10),
+                                    FutureBuilder(
+                                      future:
+                                          changeLanguage('My Farm Monitoring'),
+                                      builder: (context, i) => i.hasData
+                                          ? Text(
+                                              i.data,
+                                              style: TextStyle(
+                                                  fontWeight: FontWeight.w500,
+                                                  fontSize: height(context)*0.016),
+                                            )
+                                          : Shimmer.fromColors(
+                                              baseColor: Colors.grey.shade300,
+                                              highlightColor: Colors.white,
+                                              child: Card(
+                                                child: SizedBox(
+                                                  height:
+                                                      height(context) * 0.014,
+                                                  width: width(context) * 0.25,
+                                                ),
+                                              )),
+                                    ),
+                                    // ChangedLanguage(text:'My Farm Monitoring',
+                                    //     textAlign: TextAlign.center,
+                                    //     style: TextStyle(
+                                    //       // color: Colors.black,
+                                    //       fontSize: 16,
+                                    //     )),
+                                  ]),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    // InkWell(
+                    //   onTap: () {
+                    //     noofFarms!=0?
+                    //     Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(
+                    //             builder: (context) => MyWebView(
+                    //                   api_key: api_key,
+                    //                 ))):QuickAlert.show(
+                    //       context: context,
+                    //       type: QuickAlertType.info,
+                    //       text: 'Please add your farm first ',
+                    //     );
+                    //     // showDialog(
+                    //     //     context: context,
+                    //     //     builder: (BuildContext context) {
+                    //     //       return AlertDialog(
+                    //     //         backgroundColor: Colors.red[100],
+                    //     //         title: Text("Farm Required"),
+                    //     //         content: Text("Please add your farm first"),
+                    //     //         actions: <Widget>[
+                    //     //           IconButton(
+                    //     //               icon: Icon(Icons.check),
+                    //     //               onPressed: () {
+                    //     //                 Navigator.of(context).pop();
+                    //     //               })
+                    //     //         ],
+                    //     //       );
+                    //     //     });
+                    //   },
+                    //   child: Container(
+                    //     width: width(context) * 0.9,
+                    //     height: height(context) * 0.06,
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.white,
+                    //       borderRadius: BorderRadius.circular(10),
+                    //       border: Border.all(color: Color(0xffECB34F), width: 1),
+                    //     ),
+                    //     padding: const EdgeInsets.symmetric(horizontal: 15),
+                    //     child: Row(
+                    //       children: [
+                    //         Image.asset(
+                    //           "assets/images/farm_image-3.png",
+                    //           height: 40,
+                    //           width: 40,
+                    //         ),
+                    //         const SizedBox(
+                    //           width: 18,
+                    //         ),
+                    //         const Text('Disease Advisory'),
+                    //         Expanded(
+                    //           child: Container(),
+                    //         ),
+                    //         Icon(
+                    //           Icons.arrow_forward_ios,
+                    //           size: height(context) * 0.02,
+                    //           color: Color(0xffECB34F),
+                    //         )
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
+                    // const SizedBox(
+                    //   height: 7,
+                    // ),
+                    // InkWell(
+                    //   onTap: () {
+                    //     Navigator.push(
+                    //         context,
+                    //         MaterialPageRoute(
+                    //             builder: (context) => const AdvisoryActivity()));
+                    //   },
+                    //   child: Container(
+                    //     width: width(context) * 0.9,
+                    //     height: height(context) * 0.06,
+                    //     decoration: BoxDecoration(
+                    //       color: Colors.white,
+                    //       borderRadius: BorderRadius.circular(10),
+                    //       border: Border.all(color: Color(0xffECB34F), width: 1),
+                    //     ),
+                    //     padding: const EdgeInsets.symmetric(horizontal: 15),
+                    //     child: Row(
+                    //       children: [
+                    //         Image.asset(
+                    //           "assets/new_icons/Disease detection.png",
+                    //           height: 55,
+                    //           width: 55,
+                    //         ),
+                    //         const SizedBox(
+                    //           width: 10,
+                    //         ),
+                    //         const Text('Disease Advisory'),
+                    //         Expanded(
+                    //           child: Container(),
+                    //         ),
+                    //         Icon(
+                    //           Icons.arrow_forward_ios,
+                    //           size: height(context) * 0.02,
+                    //           color: Color(0xffECB34F),
+                    //         )
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
+                    SizedBox(
+                      height: 18,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('',style: TextStyle(color: Colors.blueGrey,fontWeight: FontWeight.bold),),
-                            SizedBox(height: 10,),
-                            Row(
-                              children: [
-                                //Image.asset('assets/images/temperature.png',height:50,width:70,fit: BoxFit.fill,),
-                                //Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                Icon(Icons.sunny,color: Colors.orangeAccent,size: 50,),
-                                SizedBox(width:10,),
-                                Text('\u2103',style: TextStyle(fontSize:25,color: Colors.blueGrey),)
-                              ],
-                            ),
-                            SizedBox(height:10,),
-                            Text('',style: TextStyle(color: Colors.blueGrey),)
-                          ],
-                        ),
-                        SizedBox(width:width(context)*0.15,),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              //Text('Feels Like 34\u2103',style: TextStyle(color: Colors.blueGrey),),
-                              // Row(
-                              //   children: [
-                              //     Icon(Icons.arrow_upward,color: Colors.blueGrey),
-                              //     Text('37\u2103',style: TextStyle(color: Colors.blue),),
-                              //     SizedBox(width: 20,),
-                              //     Icon(Icons.arrow_downward,color: Colors.blueGrey,),
-                              //     Text('34\u2103',style: TextStyle(color: Colors.blue),)
-                              //   ],
-                              // ),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(Icons.water_drop,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Humidity',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text(' %',style: TextStyle(color: Colors.blue),)
-                                ],
-                              ),
-                              SizedBox(height: 10,),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(FontAwesomeIcons.wind,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Wind',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text(' kph',style: TextStyle(color: Colors.blue),)
-                                ],
-                              ),
-                              SizedBox(height: 10,),
-                              Row(
-                                //mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  Icon(Icons.compress,color: Colors.blueGrey),
-                                  SizedBox(width: 10,),
-                                  ChangedLanguage(text:'Pressure',style: TextStyle(color: Colors.blueGrey),),
-                                  SizedBox(width: 10,),
-                                  Text(' hPa',style: TextStyle(color: Colors.blue),)
-                                ],
-                              ),
-                            ],
-                          ),
-                        )
+                        ChangedLanguage(
+                            text: "Total Mapped Farms", //My Crops
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        // Container(
+                        //   padding: const EdgeInsets.symmetric(
+                        //       horizontal: 15, vertical: 5),
+                        //   decoration: BoxDecoration(
+                        //     color: Colors.white,
+                        //     borderRadius: BorderRadius.circular(30),
+                        //   ),
+                        //   child: const Center(
+                        //     child: Icon(
+                        //       Icons.arrow_forward,
+                        //       color: Color(0xffECB34F),
+                        //       size: 20,
+                        //     ),
+                        //   ),
+                        // )
                       ],
+                    ),
+                    const SizedBox(
+                      height: 12,
                     )
                   ],
                 ),
-              )*/
-          ),
-
-          SizedBox(
-            height: 10,
-          ),
-
-          Container(
-            margin: const EdgeInsets.only(top: 15),
-            padding: EdgeInsets.symmetric(
-                horizontal: width(context) * 0.05),
-            child: Column(
-              children: [
-                /*Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              GestureDetector(
+                onTap: () {
+                  // noofFarms != 0
+                  //     ? Navigator.push(context,
+                  //         MaterialPageRoute(builder: (context) => FarmIdScreen()))
+                  //     : QuickAlert.show(
+                  //         context: context,
+                  //         type: QuickAlertType.info,
+                  //         text: 'Please add your farm first ',
+                  //       );
+                },
+                child: Stack(
                   children: [
-                    const Text("Agronomist's Advice",
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    InkWell(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => ExpertCall(
-                                    user: user, email: email, phone: phone)));
+                    Container(
+                      height: height(context) * 0.18,
+                      //width: width(context) * 0.9,
+                      //margin: const EdgeInsets.symmetric(horizontal: 20),
+                      foregroundDecoration: BoxDecoration(
+                        color: Colors.black26,
+                        //borderRadius: BorderRadius.circular(10),
+                      ),
+                      decoration: BoxDecoration(
+                          color: Colors.grey.shade400,
+                          // borderRadius: BorderRadius.circular(10),
+                          image: const DecorationImage(
+                              image:
+                                  AssetImage('assets/illustrations/farms.jpg'),
+                              fit: BoxFit.fill)),
+                    ),
+                    Positioned(
+                      left: width(context) * 0.08,
+                      child: Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                                text: noofFarms,
+                                style: TextStyle(
+                                    fontSize: 65,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
+                            TextSpan(
+                              text: '  FARMS MAPPED',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                  fontSize: 20),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 3),
+                child: GridView.builder(
+                  // itemCount: horizontalScroll1.length,
+                  // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  //     crossAxisCount: 2,
+                  //     crossAxisSpacing: 6.0,
+                  //     mainAxisSpacing:6.0,
+                  //     //mainAxisSpacing: 4.0,
+                  //   childAspectRatio:2/1.8,
+                  // ),
+                  itemCount: horizontalScroll1.length,
+                  gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                      maxCrossAxisExtent: 200,
+                      childAspectRatio: 3 / 2.7,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10),
+                  shrinkWrap: true,
+                  physics: ScrollPhysics(),
+                  itemBuilder: (BuildContext context, int index) {
+                    return GestureDetector(
+                      onTap: () async {
+                        index == 0
+                            ? Navigator.pushNamed(context, '/${index}')
+                            : noofFarms != '0'
+                                ? Navigator.pushNamed(context, '/${index}')
+                                : QuickAlert.show(
+                                    context: context,
+                                    type: QuickAlertType.info,
+                                    title: await changeLanguage('Information'),
+                                    text: await changeLanguage(
+                                        'Please add your farm first...'),
+                                  );
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15, vertical: 5),
+                        height: height(context) * 0.18,
+                        width: width(context) * 0.45,
                         decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(30)),
-                        child: const Center(
-                          child: Icon(
-                            Icons.phone,
-                            color: Color(0xffECB34F),
-                            size: 18,
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                                blurRadius: 12,
+                                spreadRadius: 0,
+                                color: Colors.grey.shade200)
+                          ],
+                          border:
+                              Border.all(color: Colors.grey.shade400, width: 1),
+                        ),
+                        child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(2),
+                                height: height(context) * 0.12,
+                                width: height(context) * 0.12,
+                                decoration: BoxDecoration(
+                                    //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                    borderRadius: BorderRadius.circular(
+                                        height(context) * 0.07),
+                                    boxShadow: [
+                                      BoxShadow(
+                                          blurRadius: 12,
+                                          spreadRadius: 0,
+                                          color: Colors.grey.shade200)
+                                    ]
+                                    //color: Colors.black,//Color(color),
+
+                                    /*image: DecorationImage(
+                                        fit: BoxFit.fill,
+                                        image: AssetImage(
+                                          horizontalScroll1[index].image,
+                                        ))*/
+                                    ),
+                                /* child: Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(6.0),
+                                          child: Text(
+                                            'My Farm Monitoring',
+                                            // style: TextStyle(
+                                            // color: Colors.black,
+                                            // fontSize: 16,
+                                            // fontWeight: FontWeight.w600)
+                                          ),
+                                        )),*/
+                                child: Center(
+                                    child: SvgPicture.asset(
+                                        horizontalScroll1[index].image)),
+                              ),
+                              // SizedBox(height: 10),
+                              FutureBuilder(
+                                future: changeLanguage(
+                                    horizontalScroll1[index].name),
+                                builder: (context, i) => i.hasData
+                                    ? Text(
+                                        i.data,
+                                        style: TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                            fontSize: 16.0),
+                                      )
+                                    : Shimmer.fromColors(
+                                        baseColor: Colors.grey.shade300,
+                                        highlightColor: Colors.white,
+                                        child: Card(
+                                          child: SizedBox(
+                                            height: height(context) * 0.014,
+                                            width: width(context) * 0.25,
+                                          ),
+                                        )),
+                              )
+                              /*ChangedLanguage(text:horizontalScroll1[index].name,
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  )),*/
+                            ]),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     GestureDetector(
+              //       onTap: () {
+              //         Navigator.pushNamed(context, '/0');
+              //       },
+              //       child: Container(
+              //         height: height(context) * 0.18,
+              //         width: width(context) * 0.45,
+              //         decoration: BoxDecoration(
+              //           color: Colors.white,
+              //           borderRadius: BorderRadius.circular(10),
+              //           border: Border.all(color: Colors.black38, width: 1),
+              //         ),
+              //         child: Column(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Container(
+              //                 height: height(context) * 0.07,
+              //                 width: width(context) * 0.170,
+              //                 decoration: BoxDecoration(
+              //                   //color: Colors.black,//Color(color),
+              //
+              //                     image: DecorationImage(
+              //                         fit: BoxFit.fill,
+              //                         image: AssetImage(
+              //                           'assets/illustrations/disease_detection.png',
+              //                         ))),
+              //                 /* child: Align(
+              //                         alignment: Alignment.bottomCenter,
+              //                         child: Padding(
+              //                           padding: const EdgeInsets.all(6.0),
+              //                           child: Text(
+              //                             'My Farm Monitoring',
+              //                             // style: TextStyle(
+              //                             // color: Colors.black,
+              //                             // fontSize: 16,
+              //                             // fontWeight: FontWeight.w600)
+              //                           ),
+              //                         )),*/
+              //               ),
+              //               SizedBox(height: 10),
+              //               ChangedLanguage(text:"Disease Advisory",
+              //                   style: TextStyle(
+              //                     fontSize: 16,
+              //                   )),
+              //             ]),
+              //       ),
+              //     ),
+              //     SizedBox(width: 10,),
+              //     GestureDetector(
+              //       onTap: () {
+              //         noofFarms != 0
+              //             ? Navigator.pushNamed(context, '/1')
+              //             : QuickAlert.show(
+              //           context: context,
+              //           type: QuickAlertType.info,
+              //           text: 'Please add your farm first ',
+              //         );
+              //       },
+              //       child: Container(
+              //         height: height(context) * 0.18,
+              //         width: width(context) * 0.45,
+              //         decoration: BoxDecoration(
+              //           color: Colors.white,
+              //           borderRadius: BorderRadius.circular(10),
+              //           border: Border.all(color: Colors.black38, width: 1),
+              //         ),
+              //         child: Column(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Container(
+              //                 height: height(context) * 0.07,
+              //                 width:width(context) * 0.170,
+              //                 decoration: BoxDecoration(
+              //                   //color: Colors.black,//Color(color),
+              //
+              //                     image: DecorationImage(
+              //                         fit: BoxFit.fill,
+              //                         image: AssetImage(
+              //                           "assets/illustrations/farm.png",
+              //                         ))),
+              //                 /* child: Align(
+              //                         alignment: Alignment.bottomCenter,
+              //                         child: Padding(
+              //                           padding: const EdgeInsets.all(6.0),
+              //                           child: Text(
+              //                             'My Farm Monitoring',
+              //                             // style: TextStyle(
+              //                             // color: Colors.black,
+              //                             // fontSize: 16,
+              //                             // fontWeight: FontWeight.w600)
+              //                           ),
+              //                         )),*/
+              //               ),
+              //               SizedBox(height: 10),
+              //               ChangedLanguage(text:"Add Crop",
+              //                   style: TextStyle(
+              //                     fontSize: 16,
+              //                   )),
+              //             ]),
+              //       ),
+              //     )
+              //   ],
+              // ),
+              // SizedBox(
+              //   height: 10,
+              // ),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.center,
+              //   children: [
+              //     GestureDetector(
+              //       onTap: () {
+              //         noofFarms != 0
+              //             ? Navigator.pushNamed(context, '/2')
+              //             : QuickAlert.show(
+              //           context: context,
+              //           type: QuickAlertType.info,
+              //           text: 'Please add your farm first ',
+              //         );
+              //       },
+              //       child: Container(
+              //         height: height(context) * 0.18,
+              //         width: width(context) * 0.45,
+              //         decoration: BoxDecoration(
+              //           color: Colors.white,
+              //           borderRadius: BorderRadius.circular(10),
+              //           border: Border.all(color: Colors.black38, width: 1),
+              //         ),
+              //         child: Column(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Container(
+              //                 height: height(context) * 0.07,
+              //                 width: width(context) * 0.17,
+              //                 decoration: BoxDecoration(
+              //                   //color: Colors.black,//Color(color),
+              //
+              //                     image: DecorationImage(
+              //                         fit: BoxFit.fill,
+              //                         image: AssetImage(
+              //                           'assets/illustrations/scouting.png',
+              //                         ))),
+              //                 /* child: Align(
+              //                         alignment: Alignment.bottomCenter,
+              //                         child: Padding(
+              //                           padding: const EdgeInsets.all(6.0),
+              //                           child: Text(
+              //                             'My Farm Monitoring',
+              //                             // style: TextStyle(
+              //                             // color: Colors.black,
+              //                             // fontSize: 16,
+              //                             // fontWeight: FontWeight.w600)
+              //                           ),
+              //                         )),*/
+              //               ),
+              //               SizedBox(height: 10),
+              //               ChangedLanguage(text:"Scouting",
+              //                   style: TextStyle(
+              //                     fontSize: 16,
+              //                   )),
+              //             ]),
+              //       ),
+              //     ),
+              //     SizedBox(width: 10,),
+              //     GestureDetector(
+              //       onTap: () {
+              //         noofFarms != 0
+              //             ? Navigator.pushNamed(context, '/3')
+              //             : QuickAlert.show(
+              //           context: context,
+              //           type: QuickAlertType.info,
+              //           text: 'Please add your farm first ',
+              //         );
+              //       },
+              //       child: Container(
+              //         height: height(context) * 0.18,
+              //         width: width(context) * 0.45,
+              //         decoration: BoxDecoration(
+              //           color: Colors.white,
+              //           borderRadius: BorderRadius.circular(10),
+              //           border: Border.all(color: Colors.black38, width: 1),
+              //         ),
+              //         child: Column(
+              //             mainAxisAlignment: MainAxisAlignment.center,
+              //             children: [
+              //               Container(
+              //                 height: height(context) * 0.07,
+              //                 width:width(context) * 0.170,
+              //                 decoration: BoxDecoration(
+              //                   //color: Colors.black,//Color(color),
+              //
+              //                     image: DecorationImage(
+              //                         fit: BoxFit.fill,
+              //                         image: AssetImage(
+              //                           "assets/illustrations/agriculture.png",
+              //                         ))),
+              //                 /* child: Align(
+              //                         alignment: Alignment.bottomCenter,
+              //                         child: Padding(
+              //                           padding: const EdgeInsets.all(6.0),
+              //                           child: Text(
+              //                             'My Farm Monitoring',
+              //                             // style: TextStyle(
+              //                             // color: Colors.black,
+              //                             // fontSize: 16,
+              //                             // fontWeight: FontWeight.w600)
+              //                           ),
+              //                         )),*/
+              //               ),
+              //               SizedBox(height: 10),
+              //               ChangedLanguage(text:"Farm Planner",
+              //                   style: TextStyle(
+              //                     fontSize: 16,
+              //                   )),
+              //             ]),
+              //       ),
+              //     )
+              //   ],
+              // ),
+              SizedBox(
+                height: 10,
+              ),
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 20),
+              //   child: Row(
+              //     children: [
+              //       InkWell(
+              //         onTap: () {
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => AddNewFarmsActivity()));
+              //         },
+              //         child: Container(
+              //           width: width(context) * 0.44,
+              //           height: height(context) * 0.056,
+              //           decoration: BoxDecoration(
+              //             color: Colors.white,
+              //             borderRadius: BorderRadius.circular(10),
+              //             border: Border.all(color: Color(0xffECB34F), width: 1),
+              //           ),
+              //           padding: const EdgeInsets.symmetric(horizontal: 10),
+              //           child: Row(
+              //             children: [
+              //               Image.asset(
+              //                 "assets/new_icons/Add Farm.png",
+              //                 height: 45,
+              //                 width: 45,
+              //               ),
+              //               /*const Icon(
+              //                 Icons.message,
+              //                 color: Color(0xffECB34F),
+              //               ),*/
+              //               const SizedBox(
+              //                 width: 10,
+              //               ),
+              //               const Text(
+              //                 'Add Farm',
+              //               ),
+              //               Expanded(
+              //                 child: Container(),
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 size: height(context) * 0.02,
+              //                 color: Color(0xffECB34F),
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //       Expanded(child: SizedBox()),
+              //       InkWell(
+              //         onTap: () {
+              //           noofFarms!=0?
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) =>  AddCropActivity())):
+              //           QuickAlert.show(
+              //             context: context,
+              //             type: QuickAlertType.info,
+              //             text: 'Please add your farm first ',
+              //           );
+              //           // showDialog(
+              //           //     context: context,
+              //           //     builder: (BuildContext context) {
+              //           //       return AlertDialog(
+              //           //         backgroundColor: Colors.red[100],
+              //           //         title: Text("Farm Required"),
+              //           //         content: Text("Please add your farm first"),
+              //           //         actions: <Widget>[
+              //           //           IconButton(
+              //           //               icon: Icon(Icons.check),
+              //           //               onPressed: () {
+              //           //                 Navigator.of(context).pop();
+              //           //               })
+              //           //         ],
+              //           //       );
+              //           //     });
+              //         },
+              //         child: Container(
+              //           width: width(context) * 0.44,
+              //           height: height(context) * 0.056,
+              //           decoration: BoxDecoration(
+              //             color: Colors.white,
+              //             borderRadius: BorderRadius.circular(10),
+              //             border: Border.all(color: Color(0xffECB34F), width: 1),
+              //           ),
+              //           padding: const EdgeInsets.symmetric(horizontal: 10),
+              //           child: Row(
+              //             children: [
+              //               /*const Icon(
+              //                 Icons.message,
+              //                 color: Color(0xffECB34F),
+              //               ),*/
+              //               Image.asset(
+              //                 "assets/new_icons/Add Crops.png",
+              //                 height: 45,
+              //                 width: 45,
+              //               ),
+              //               const SizedBox(
+              //                 width: 10,
+              //               ),
+              //               const Text('Add Crop'),
+              //               Expanded(
+              //                 child: Container(),
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 size: height(context) * 0.02,
+              //                 color: Color(0xffECB34F),
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              // /*InkWell(
+              //         onTap: () {
+              //
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => MyWebView(uid: uid,api_key: api_key)));
+              //          // launch('http://app.mapmycrop.com/mobile-dashboard.php?user_id=$uid');
+              //         },
+              //         child: Container(
+              //           width: double.maxFinite,
+              //           height: height(context) * 0.05,
+              //           decoration: BoxDecoration(
+              //               color: Colors.white,
+              //               borderRadius: BorderRadius.circular(10),
+              //               border: Border.all(color: Color(0xffECB34F), width: 1)),
+              //           padding: const EdgeInsets.symmetric(horizontal: 15),
+              //           child: Row(
+              //             children: [
+              //               const Icon(
+              //                 Icons.message,
+              //                 color: Color(0xffECB34F),
+              //               ),
+              //               const SizedBox(
+              //                 width: 10,
+              //               ),
+              //               const Text('Farms'),
+              //               Expanded(
+              //                 child: Container(),
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 size: height(context) * 0.02,
+              //                 color: Color(0xffECB34F),
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       ),*/
+              // const SizedBox(
+              //   height: 12,
+              // ),
+              // Padding(
+              //   padding: const EdgeInsets.symmetric(horizontal: 20),
+              //   child: Row(
+              //     children: [
+              //       InkWell(
+              //         onTap: () {
+              //           noofFarms!=0?
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => const ScoutingActivity())):
+              //           QuickAlert.show(
+              //             context: context,
+              //             type: QuickAlertType.info,
+              //             text: 'Please add your farm first ',
+              //           );
+              //         },
+              //         child: Container(
+              //           width: width(context) * 0.44,
+              //           height: height(context) * 0.056,
+              //           decoration: BoxDecoration(
+              //             color: Colors.white,
+              //             borderRadius: BorderRadius.circular(10),
+              //             border: Border.all(color: Color(0xffECB34F), width: 1),
+              //           ),
+              //           padding: const EdgeInsets.symmetric(horizontal: 10),
+              //           child: Row(
+              //             mainAxisAlignment: MainAxisAlignment.start,
+              //             children: [
+              //               Image.asset(
+              //                 "assets/new_icons/Scouting.png",
+              //                 height: 45,
+              //                 width: 45,
+              //               ),
+              //               const SizedBox(
+              //                 width: 10,
+              //               ),
+              //               const Text('Scouting'),
+              //               Expanded(
+              //                 child: Container(),
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 size: height(context) * 0.02,
+              //                 color: Color(0xffECB34F),
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //       Expanded(child: SizedBox()),
+              //       InkWell(
+              //         onTap: () {
+              //           noofFarms!=0?
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) =>  PlannerActivity())):QuickAlert.show(
+              //             context: context,
+              //             type: QuickAlertType.info,
+              //             text: 'Please add your farm first ',
+              //           );
+              //           // showDialog(
+              //           //     context: context,
+              //           //     builder: (BuildContext context) {
+              //           //       return AlertDialog(
+              //           //         backgroundColor: Colors.red[100],
+              //           //         title: Text("Farm Required"),
+              //           //         content: Text("Please add your farm first"),
+              //           //         actions: <Widget>[
+              //           //           IconButton(
+              //           //               icon: Icon(Icons.check),
+              //           //               onPressed: () {
+              //           //                 Navigator.of(context).pop();
+              //           //               })
+              //           //         ],
+              //           //       );
+              //           //     });
+              //         },
+              //         child: Container(
+              //           width: width(context) * 0.44,
+              //           height: height(context) * 0.056,
+              //           decoration: BoxDecoration(
+              //             color: Colors.white,
+              //             borderRadius: BorderRadius.circular(10),
+              //             border: Border.all(color: Color(0xffECB34F), width: 1),
+              //           ),
+              //           padding: const EdgeInsets.symmetric(horizontal: 10),
+              //           child: Row(
+              //             children: [
+              //               Image.asset(
+              //                 "assets/new_icons/Farm Planner.png",
+              //                 height: 45,
+              //                 width: 45,
+              //               ),
+              //               const SizedBox(
+              //                 width: 15,
+              //               ),
+              //               const Text(
+              //                 'Planner',
+              //                 textAlign: TextAlign.center,
+              //               ),
+              //               Expanded(
+              //                 child: const Text(
+              //                   '',
+              //                 ),
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 size: height(context) * 0.02,
+              //                 color: Color(0xffECB34F),
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(
+              //   height:5.0,
+              // ),
+              GestureDetector(
+                onTap: () {
+                  FirebaseAnalytics.instance.logEvent(
+                    name: "market",
+                    parameters: {
+                      "content_type": "Activity_planned",
+                      "api_key": api_key,
+                    },
+                  ).onError((error, stackTrace) =>
+                      print('analytics error is $error'));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context)=> FarmIdScreen()));
+                  Navigator.push(context,
+                      MaterialPageRoute(builder: (context) => MandiPriceDta()));
+                },
+                child: /*Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Container(
+                      // margin: const EdgeInsets.symmetric(horizontal: 20,vertical:10),
+                      height: height(context) * 0.18,
+                      foregroundDecoration: BoxDecoration(
+                        // color: Colors.black26,
+                        borderRadius: BorderRadius.circular(5),
+                      ),
+
+                      //width: width(context) * 0.9,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Color(0xfff9e2ae),
+                            Color(0xfff9e2ae),
+                          ],
+
+                          //borderRadius: BorderRadius.circular(5),
+                        ),
+                        //color: Colors.grey.shade200,
+                        */ /*child: Align(
+                        alignment: Alignment.center,
+                        child: Container(
+                          height: height(context)*0.07,
+                          width: width(context)*0.45,
+                          //color: Colors.white,
+                          padding: EdgeInsets.all(height(context) * 0.01),
+                          decoration: BoxDecoration(
+                              color: Colors.white24,
+                              //borderRadius: BorderRadius.circular(10)
+                          ),
+                          child: Center(
+                            child: Text(
+                              'Markets',
+                              style: TextStyle(
+                                color: Colors.white,
+                                  fontSize: 25, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ),*/ /*
+                      ),
+                      child: Row(
+                        children: [
+                          Image.asset(
+                            'assets/illustrations/mandi.jpg',
+                            height: height(context) * 0.175,
+                            width: width(context) * 0.50,
+                            fit: BoxFit.fill,
+                          ),
+                          SizedBox(
+                            width: width(context) * 0.06,
+                          ),
+                          Expanded(
+                            child: ChangedLanguage(
+                              text: 'Mandi Rates',
+                              // softWrap: true,
+                              // maxLines: 2,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Colors.black87,
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                )*/
+                    Stack(
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
+                      height: height(context) * 0.18,
+                      width: width(context),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.shade300,
+                                offset: Offset(10, 10),
+                                blurRadius: 12,
+                                spreadRadius: 0)
+                          ]
+                          //borderRadius: BorderRadius.circular(10),
+                          /*image: DecorationImage(
+                            //opacity: 0.8,
+                            //image: SvgPicture.asset('assets/illustrations/FertilizerRecommendation.jpg'),
+                            fit: BoxFit.fill,
+                            colorFilter: ColorFilter.mode(
+                                Colors.black.withOpacity(0.82), BlendMode.dstATop),
+                          )*/
+                          ),
+                      child: SvgPicture.asset(
+                        'assets/svgImages/Market.svg',
+                        fit: BoxFit.fill,
+                        width: width(context),
+                      ),
+                      //color: Colors.grey.shade200,
+                      /*child: Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 10.0),
+                              child: Container(
+                                //color: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: height(context) * 0.02),
+                                decoration: BoxDecoration(
+                                    color: Colors.white70,
+                                    borderRadius: BorderRadius.circular(4)),
+                                child: Text(
+                                  'Fertilizer Recommendation',
+                                  style: TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),*/
+                    ),
+                    Positioned(
+                      top: height(context)*0.01,
+                      right: width(context)*0.05,
+                      child: Container(
+
+                        height: height(context)*0.04,
+                        width: width(context)*0.51,
+                        child: Center(
+                          child: languageText(
+                            'Mandi',
+                            TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff585858)),
                           ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-                const SizedBox(
-                  height: 12,
-                ),*/
-                Row(
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                child: Row(
                   children: [
                     Flexible(
                       flex: 1,
                       child: GestureDetector(
                         onTap: () {
-                          _isinstructions!=true?Navigator.push(
+                          FirebaseAnalytics.instance.logEvent(
+                            name: "crop_guide",
+                            parameters: {
+                              "content_type": "Activity_planned",
+                              "api_key": api_key,
+                            },
+                          ).onError((error, stackTrace) =>
+                              print('analytics error is $error'));
+                          Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => DrawGuideActivity())):Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => AddNewFarmsActivity()));
+                                  builder: (context) => CropGuideDashboard()));
                         },
                         child: Container(
                           height: height(context) * 0.18,
@@ -1016,51 +2552,104 @@ class _DashboardActivityState extends State<DashboardActivity> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.black38, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 12,
+                                  spreadRadius: 0,
+                                  color: Colors.grey.shade200)
+                            ],
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
                           ),
                           child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  height:
-                                      height(context) * 0.07,
-                                  width:
-                                      width(context) * 0.170,
+                                /* Container(
+                                  height: height(context) * 0.12,
+                                  width: width(context) * 0.20,
                                   decoration: BoxDecoration(
                                       //color: Colors.black,//Color(color),
 
-                                      image: const DecorationImage(
+                                      */ /*image: const DecorationImage(
                                           fit: BoxFit.fill,
                                           image: AssetImage(
-                                            'assets/illustrations/Add-Farm.png',
-                                          ))),
+                                            'assets/illustrations/Crop_Guide.png',
+                                          ))*/ /*),
+                                  */ /* child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(6.0),
+                                        child: Text(
+                                          'My Farm Monitoring',
+                                          // style: TextStyle(
+                                          // color: Colors.black,
+                                          // fontSize: 16,
+                                          // fontWeight: FontWeight.w600)
+                                        ),
+                                      )),*/ /*
+                                  child: SvgPicture.asset('assets/svgImages/Crop_Guide.svg'),
+                                )*/
+                                Container(
+                                  padding: EdgeInsets.all(2),
+                                  height: height(context) * 0.12,
+                                  width: height(context) * 0.12,
+                                  decoration: BoxDecoration(
+                                      //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                      borderRadius: BorderRadius.circular(
+                                          height(context) * 0.07),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                            color: Colors.grey.shade200)
+                                      ]
+                                      //color: Colors.black,//Color(color),
+
+                                      /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                      ),
                                   /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                  child: Center(
+                                      child: SvgPicture.asset(
+                                          'assets/svgImages/Crop_Guide.svg')),
                                 ),
-                                SizedBox(height: 10),
-                                FutureBuilder(future:changeLanguage('Add Farm'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                    baseColor: Colors.grey.shade300,
-                                    highlightColor: Colors.white,child: Card(
-                                  child: SizedBox(
-                                    height: height(context)*0.014,
-                                    width: width(context)*0.25,
-                                  ),
-                                )),)
-                                // ChangedLanguage(text:'Add Farm',
-                                //     style: TextStyle(
-                                //       // color: Colors.black,
-                                //       fontSize: 16,
-                                //     )),
+                                FutureBuilder(
+                                  future: changeLanguage('Crop Guide'),
+                                  builder: (context, i) => i.hasData
+                                      ? Text(
+                                          i.data,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16.0),
+                                        )
+                                      : Shimmer.fromColors(
+                                          baseColor: Colors.grey.shade300,
+                                          highlightColor: Colors.white,
+                                          child: Card(
+                                            child: SizedBox(
+                                              height: height(context) * 0.014,
+                                              width: width(context) * 0.25,
+                                            ),
+                                          )),
+                                )
+                                /*ChangedLanguage(text:'Crop Guide',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    )),*/
                               ]),
                         ),
                       ),
@@ -1072,19 +2661,23 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       flex: 1,
                       child: GestureDetector(
                         onTap: () async {
-                          noofFarms != 0
-                              ? Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => MyWebView(
-                                            api_key: api_key,
-                                          )))
-                              : QuickAlert.show(
-                                  context: context,
-                                  type: QuickAlertType.info,
-                                  title: await changeLanguage('Information'),
-                                  text: await changeLanguage('Please add your farm first...'),
-                                );
+                          FirebaseAnalytics.instance.logEvent(
+                            name: "community",
+                            parameters: {
+                              "content_type": "Activity_planned",
+                              "api_key": api_key,
+                            },
+                          ).onError((error, stackTrace) =>
+                              print('analytics error is $error'));
+                          QuickAlert.show(
+                              context: context,
+                              type: QuickAlertType.loading,
+                              text: await changeLanguage("Coming Soon..."));
+
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //         builder: (context) => const CommunityWebview()));
                         },
                         child: Container(
                           height: height(context) * 0.18,
@@ -1092,1493 +2685,811 @@ class _DashboardActivityState extends State<DashboardActivity> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Colors.black38, width: 1),
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 12,
+                                  spreadRadius: 0,
+                                  color: Colors.grey.shade200)
+                            ],
                           ),
                           child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Container(
-                                  height:
-                                      height(context) * 0.07,
-                                  width:
-                                      width(context) * 0.170,
+                                /*Container(
+                                  height: height(context) * 0.12,
+                                  width: width(context) * 0.20,
                                   decoration: BoxDecoration(
                                       //color: Colors.black,//Color(color),
 
-                                      image: const DecorationImage(
+                                      */ /*image: const DecorationImage(
                                           fit: BoxFit.fill,
                                           image: AssetImage(
-                                            'assets/illustrations/farm_monitoring.png',
-                                          ))),
+                                            'assets/illustrations/contactus.png',
+                                          ))*/ /*),
+                                  */ /* child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(6.0),
+                                        child: Text(
+                                          'My Farm Monitoring',
+                                          // style: TextStyle(
+                                          // color: Colors.black,
+                                          // fontSize: 16,
+                                          // fontWeight: FontWeight.w600)
+                                        ),
+                                      )),*/ /*
+                                  child: SvgPicture.asset('assets/svgImages/Community.svg'),
+                                ),*/
+                                Container(
+                                  padding: EdgeInsets.all(2),
+                                  height: height(context) * 0.12,
+                                  width: height(context) * 0.12,
+                                  decoration: BoxDecoration(
+                                      //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                      borderRadius: BorderRadius.circular(
+                                          height(context) * 0.07),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                            color: Colors.grey.shade200)
+                                      ]
+                                      //color: Colors.black,//Color(color),
+
+                                      /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                      ),
                                   /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                  child: Center(
+                                      child: SvgPicture.asset(
+                                          'assets/svgImages/Community.svg')),
                                 ),
-                                SizedBox(height: 10),
-                                FutureBuilder(future:changeLanguage('My Farm Monitoring'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                    baseColor: Colors.grey.shade300,
-                                    highlightColor: Colors.white,child: Card(
-                                  child: SizedBox(
-                                    height: height(context)*0.014,
-                                    width: width(context)*0.25,
-                                  ),
-                                )),),
-                                // ChangedLanguage(text:'My Farm Monitoring',
-                                //     textAlign: TextAlign.center,
-                                //     style: TextStyle(
-                                //       // color: Colors.black,
-                                //       fontSize: 16,
-                                //     )),
+                                // SizedBox(height: 10),
+                                FutureBuilder(
+                                  future: changeLanguage('Community'),
+                                  builder: (context, i) => i.hasData
+                                      ? Text(
+                                          i.data,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16.0),
+                                        )
+                                      : Shimmer.fromColors(
+                                          baseColor: Colors.grey.shade300,
+                                          highlightColor: Colors.white,
+                                          child: Card(
+                                            child: SizedBox(
+                                              height: height(context) * 0.014,
+                                              width: width(context) * 0.25,
+                                            ),
+                                          )
+                                    ),
+                                ),
+                                /*ChangedLanguage(text:'Community',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    )),*/
                               ]),
                         ),
                       ),
                     ),
                   ],
                 ),
-                // InkWell(
-                //   onTap: () {
-                //     noofFarms!=0?
-                //     Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //             builder: (context) => MyWebView(
-                //                   api_key: api_key,
-                //                 ))):QuickAlert.show(
-                //       context: context,
-                //       type: QuickAlertType.info,
-                //       text: 'Please add your farm first ',
-                //     );
-                //     // showDialog(
-                //     //     context: context,
-                //     //     builder: (BuildContext context) {
-                //     //       return AlertDialog(
-                //     //         backgroundColor: Colors.red[100],
-                //     //         title: Text("Farm Required"),
-                //     //         content: Text("Please add your farm first"),
-                //     //         actions: <Widget>[
-                //     //           IconButton(
-                //     //               icon: Icon(Icons.check),
-                //     //               onPressed: () {
-                //     //                 Navigator.of(context).pop();
-                //     //               })
-                //     //         ],
-                //     //       );
-                //     //     });
-                //   },
-                //   child: Container(
-                //     width: width(context) * 0.9,
-                //     height: height(context) * 0.06,
-                //     decoration: BoxDecoration(
-                //       color: Colors.white,
-                //       borderRadius: BorderRadius.circular(10),
-                //       border: Border.all(color: Color(0xffECB34F), width: 1),
-                //     ),
-                //     padding: const EdgeInsets.symmetric(horizontal: 15),
-                //     child: Row(
-                //       children: [
-                //         Image.asset(
-                //           "assets/images/farm_image-3.png",
-                //           height: 40,
-                //           width: 40,
-                //         ),
-                //         const SizedBox(
-                //           width: 18,
-                //         ),
-                //         const Text('Disease Advisory'),
-                //         Expanded(
-                //           child: Container(),
-                //         ),
-                //         Icon(
-                //           Icons.arrow_forward_ios,
-                //           size: height(context) * 0.02,
-                //           color: Color(0xffECB34F),
-                //         )
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                // const SizedBox(
-                //   height: 7,
-                // ),
-                // InkWell(
-                //   onTap: () {
-                //     Navigator.push(
-                //         context,
-                //         MaterialPageRoute(
-                //             builder: (context) => const AdvisoryActivity()));
-                //   },
-                //   child: Container(
-                //     width: width(context) * 0.9,
-                //     height: height(context) * 0.06,
-                //     decoration: BoxDecoration(
-                //       color: Colors.white,
-                //       borderRadius: BorderRadius.circular(10),
-                //       border: Border.all(color: Color(0xffECB34F), width: 1),
-                //     ),
-                //     padding: const EdgeInsets.symmetric(horizontal: 15),
-                //     child: Row(
-                //       children: [
-                //         Image.asset(
-                //           "assets/new_icons/Disease detection.png",
-                //           height: 55,
-                //           width: 55,
-                //         ),
-                //         const SizedBox(
-                //           width: 10,
-                //         ),
-                //         const Text('Disease Advisory'),
-                //         Expanded(
-                //           child: Container(),
-                //         ),
-                //         Icon(
-                //           Icons.arrow_forward_ios,
-                //           size: height(context) * 0.02,
-                //           color: Color(0xffECB34F),
-                //         )
-                //       ],
-                //     ),
-                //   ),
-                // ),
-                SizedBox(
-                  height: 12,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              const SizedBox(
+                height: 5.0,
+              ),
+              // SizedBox(
+              //   width: width(context) * 0.9,
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       const Text("Crop Guide",
+              //           style:
+              //               TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              //       InkWell(
+              //         onTap: () {
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => CropGuideDashboard()));
+              //         },
+              //         child: Container(
+              //           margin: const EdgeInsets.symmetric(vertical: 10),
+              //           padding: const EdgeInsets.symmetric(
+              //               horizontal: 15, vertical: 5),
+              //           decoration: BoxDecoration(
+              //               color: Colors.white,
+              //               borderRadius: BorderRadius.circular(15)),
+              //           child: Row(
+              //             children: const [
+              //               Text('More'),
+              //               SizedBox(
+              //                 width: 5,
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 color: Color(0xffECB34F),
+              //                 size: 15,
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       )
+              //     ],
+              //   ),
+              // ),
+              GestureDetector(
+                onTap: () async {
+                  FirebaseAnalytics.instance.logEvent(
+                    name: "disease_detection",
+                    parameters: {
+                      "content_type": "Activity_planned",
+                      "api_key": api_key,
+                    },
+                  ).onError((error, stackTrace) =>
+                      print('analytics error is $error'));
+                  QuickAlert.show(
+                      context: context,
+                      type: QuickAlertType.loading,
+                      text: await changeLanguage("Coming Soon..."));
+                  // Navigator.push(
+                  //     context,
+                  //     MaterialPageRoute(
+                  //         builder: (context) => DiseaseDetectionActivity()));
+                },
+                child: Stack(
                   children: [
-                     ChangedLanguage(text:"My Farm", //My Crops
-                        style: TextStyle(
-                            fontSize: 18, fontWeight: FontWeight.bold)),
-                    // Container(
-                    //   padding: const EdgeInsets.symmetric(
-                    //       horizontal: 15, vertical: 5),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.white,
-                    //     borderRadius: BorderRadius.circular(30),
-                    //   ),
-                    //   child: const Center(
-                    //     child: Icon(
-                    //       Icons.arrow_forward,
-                    //       color: Color(0xffECB34F),
-                    //       size: 20,
-                    //     ),
-                    //   ),
-                    // )
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 15, horizontal: 20),
+                      height: height(context) * 0.18,
+                      width: width(context) - 40,
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.shade300,
+                                offset: Offset(10, 10),
+                                blurRadius: 12,
+                                spreadRadius: 0)
+                          ]
+                          //borderRadius: BorderRadius.circular(10),
+                          /*image: DecorationImage(
+                            //opacity: 0.8,
+                            //image: SvgPicture.asset('assets/illustrations/FertilizerRecommendation.jpg'),
+                            fit: BoxFit.fill,
+                            colorFilter: ColorFilter.mode(
+                                Colors.black.withOpacity(0.82), BlendMode.dstATop),
+                          )*/
+                          ),
+                      child: Center(
+                          child: SvgPicture.asset(
+                              'assets/svgImages/Disease.svg',
+                              fit: BoxFit.fill)),
+                      //color: Colors.grey.shade200,
+                      /*child: Align(
+                            alignment: Alignment.center,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 10.0),
+                              child: Container(
+                                //color: Colors.white,
+                                padding: EdgeInsets.symmetric(
+                                    horizontal: height(context) * 0.02),
+                                decoration: BoxDecoration(
+                                    color: Colors.white70,
+                                    borderRadius: BorderRadius.circular(4)),
+                                child: Text(
+                                  'Fertilizer Recommendation',
+                                  style: TextStyle(
+                                      fontSize: 16, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                          ),*/
+                    ),
+                    Positioned(
+                      top: height(context)*0.02,
+                      right: width(context)*0.05,
+                      child: SizedBox(
+
+                        height: height(context)*0.04,
+                        width: width(context)*0.51,
+                        child: Center(
+                          child: languageText(
+                            'Disease Detection',
+                            TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff585858)),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ) /*Container(
+                 // padding: EdgeInsets.only(bottom: 5),
+                  color: Color(0xfffbdb5b),
+                  height: height(context) * 0.16,
+                  width: width(context),
+                  child: */ /*FittedBox(
+                    fit: BoxFit.fill,
+                    child: ClipRect(
+                      child: Container(
+                        child: Align(
+                          alignment: Alignment(-0.1, -0.5),
+                          widthFactor: 1.1,
+                          heightFactor: 0.7,
+                          child: SvgPicture.asset('assets/svgImages/Disease_Detection.svg'),
+                        ),
+                      ),
+                    ),
+                  ) SvgPicture.asset('assets/svgImages/Disease_Detection.svg'),
+                )*/
+                ,
+
+                // Container(
+                //   height: height(context) * 0.2,
+                //   width: width(context),
+                //
+                //   //padding: EdgeInsets.only(top:10),
+                //   //margin: const EdgeInsets.symmetric(horizontal: 20),
+                //   /*foregroundDecoration: BoxDecoration(
+                //       // color: Colors.black26
+                //       ),*/
+                //   decoration: BoxDecoration(
+                //       color: Color(0xfffbdb5b),
+                //       // borderRadius: BorderRadius.circular(10),
+                //      /* image: DecorationImage(
+                //           //opacity: 0.7,
+                //           image: AssetImage(
+                //               'assets/illustrations/5.png'), //AssetImage('assets/images/soilTemp.jpg'),
+                //           fit: BoxFit.fill)*/),
+                //   child:Center(child: ClipRect(child: Image.asset('assets/illustrations/6.png',width:width(context)*0.93,height:height(context)*0.2,fit:BoxFit.fill)))
+                //   /*child: Column(
+                //     mainAxisAlignment: MainAxisAlignment.end,
+                //     children: [
+                //       Container(
+                //         //color: Colors.white,
+                //         padding: EdgeInsets.symmetric(Y
+                //             horizontal: height(context) * 0.02),
+                //         decoration: BoxDecoration(
+                //             color: Colors.white24,
+                //             borderRadius: BorderRadius.circular(4)),
+                //         child: Text(
+                //           'Coming soon....',
+                //           style: TextStyle(
+                //             color: Colors.white,
+                //               fontSize: 15, fontWeight: FontWeight.bold),
+                //         ),
+                //       ),
+                //       SizedBox(
+                //         height: 23,
+                //       ),
+                //     ],
+                //   ),*/
+                // ),
+              ),
+              const SizedBox(
+                height: 5.0,
+              ),
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
+                child: Row(
+                  children: [
+                    Flexible(
+                      flex: 1,
+                      child: GestureDetector(
+                        onTap: () {
+                          FirebaseAnalytics.instance.logEvent(
+                            name: "sell_produce",
+                            parameters: {
+                              "content_type": "Activity_planned",
+                              "api_key": api_key,
+                            },
+                          ).onError((error, stackTrace) =>
+                              print('analytics error is $error'));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SelfProduce()));
+                        },
+                        child: Container(
+                          height: height(context) * 0.18,
+                          width: width(context) * 0.45,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 12,
+                                  spreadRadius: 0,
+                                  color: Colors.grey.shade200)
+                            ],
+                          ),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                /*Container(
+                                  height: height(context) * 0.12,
+                                  width: width(context) * 0.20,
+                                  decoration: BoxDecoration(
+                                      //color: Colors.black,//Color(color),
+
+                                      */ /*image: const DecorationImage(
+                                          fit: BoxFit.fill,
+                                          image: AssetImage(
+                                            'assets/illustrations/solar-energy.png',
+                                          ))*/ /*),
+                                  */ /* child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(6.0),
+                                        child: Text(
+                                          'My Farm Monitoring',
+                                          // style: TextStyle(
+                                          // color: Colors.black,
+                                          // fontSize: 16,
+                                          // fontWeight: FontWeight.w600)
+                                        ),
+                                      )),*/ /*
+                                  child: SvgPicture.asset('assets/svgImages/Sell_Produce.svg'),
+                                ),*/
+                                Container(
+                                  padding: EdgeInsets.all(2),
+                                  height: height(context) * 0.12,
+                                  width: height(context) * 0.12,
+                                  decoration: BoxDecoration(
+                                      //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                      borderRadius: BorderRadius.circular(
+                                          height(context) * 0.07),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                            color: Colors.grey.shade200)
+                                      ]
+                                      //color: Colors.black,//Color(color),
+
+                                      /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                      ),
+                                  /* child: Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                  child: Center(
+                                      child: SvgPicture.asset(
+                                          'assets/svgImages/Sell_Produce.svg')),
+                                ),
+                                // SizedBox(height: 10),
+                                FutureBuilder(
+                                  future: changeLanguage('Sell Produce'),
+                                  builder: (context, i) => i.hasData
+                                      ? Text(
+                                          i.data,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16.0),
+                                        )
+                                      : Shimmer.fromColors(
+                                          baseColor: Colors.grey.shade300,
+                                          highlightColor: Colors.white,
+                                          child: Card(
+                                            child: SizedBox(
+                                              height: height(context) * 0.014,
+                                              width: width(context) * 0.25,
+                                            ),
+                                          )),
+                                )
+                                /*ChangedLanguage(text:'Sell Produce',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    )),*/
+                              ]),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Flexible(
+                      flex: 1,
+                      child: GestureDetector(
+                        onTap: () {
+                          FirebaseAnalytics.instance.logEvent(
+                            name: "expert_call",
+                            parameters: {
+                              "content_type": "Activity_planned",
+                              "api_key": api_key,
+                            },
+                          ).onError((error, stackTrace) =>
+                              print('analytics error is $error'));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => const ExpertCall()));
+                        },
+                        child: Container(
+                          height: height(context) * 0.18,
+                          width: width(context) * 0.45,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade400, width: 1),
+                            boxShadow: [
+                              BoxShadow(
+                                  blurRadius: 12,
+                                  spreadRadius: 0,
+                                  color: Colors.grey.shade200)
+                            ],
+                          ),
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                /*Container(
+                                  height: height(context) * 0.12,
+                                  width: width(context) * 0.2,
+                                  decoration: BoxDecoration(
+                                      //color: Colors.black,//Color(color),
+
+                                      */ /*image: const DecorationImage(
+                                          fit: BoxFit.fill,
+                                          image: AssetImage(
+                                            'assets/illustrations/carrot.png',
+                                          ))*/ /*),
+                                  */ /* child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(6.0),
+                                        child: Text(
+                                          'My Farm Monitoring',
+                                          // style: TextStyle(
+                                          // color: Colors.black,
+                                          // fontSize: 16,
+                                          // fontWeight: FontWeight.w600)
+                                        ),
+                                      )),*/ /*
+                                  child: SvgPicture.asset('assets/svgImages/Schedule_Call.svg'),
+                                ),*/
+                                Container(
+                                  padding: EdgeInsets.all(2),
+                                  height: height(context) * 0.12,
+                                  width: height(context) * 0.12,
+                                  decoration: BoxDecoration(
+                                      //border: Border.all(color: Colors.grey.shade300,width: 0.5),
+                                      borderRadius: BorderRadius.circular(
+                                          height(context) * 0.07),
+                                      boxShadow: [
+                                        BoxShadow(
+                                            blurRadius: 12,
+                                            spreadRadius: 0,
+                                            color: Colors.grey.shade200)
+                                      ]
+                                      //color: Colors.black,//Color(color),
+
+                                      /*image: DecorationImage(
+                                            fit: BoxFit.fill,
+                                            image: AssetImage(
+                                              horizontalScroll1[index].image,
+                                            ))*/
+                                      ),
+                                  /* child: Align(
+                                            alignment: Alignment.bottomCenter,
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(6.0),
+                                              child: Text(
+                                                'My Farm Monitoring',
+                                                // style: TextStyle(
+                                                // color: Colors.black,
+                                                // fontSize: 16,
+                                                // fontWeight: FontWeight.w600)
+                                              ),
+                                            )),*/
+                                  child: Center(
+                                      child: SvgPicture.asset(
+                                          'assets/svgImages/Schedule_Call.svg')),
+                                ),
+                                // SizedBox(height: 10),
+                                FutureBuilder(
+                                  future: changeLanguage('Schedule Call'),
+                                  builder: (context, i) => i.hasData
+                                      ? Text(
+                                          i.data,
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 16.0),
+                                        )
+                                      : Shimmer.fromColors(
+                                          baseColor: Colors.grey.shade300,
+                                          highlightColor: Colors.white,
+                                          child: Card(
+                                            child: SizedBox(
+                                              height: height(context) * 0.014,
+                                              width: width(context) * 0.25,
+                                            ),
+                                          )),
+                                )
+                                /*ChangedLanguage(text:'Schedule Call',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                    )),*/
+                              ]),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
-                const SizedBox(
-                  height: 12,
-                )
-              ],
-            ),
-          ),
-          GestureDetector(
-            onTap: () {
-              // noofFarms != 0
-              //     ? Navigator.push(context,
-              //         MaterialPageRoute(builder: (context) => FarmIdScreen()))
-              //     : QuickAlert.show(
-              //         context: context,
-              //         type: QuickAlertType.info,
-              //         text: 'Please add your farm first ',
-              //       );
-            },
-            child: Stack(
-              children: [
-                Container(
-                  height: height(context) * 0.18,
-                  //width: width(context) * 0.9,
-                  //margin: const EdgeInsets.symmetric(horizontal: 20),
-                  foregroundDecoration: BoxDecoration(
-                    color: Colors.black26,
-                    //borderRadius: BorderRadius.circular(10),
-                  ),
-                  decoration: BoxDecoration(
-                      color: Colors.grey.shade400,
-                      // borderRadius: BorderRadius.circular(10),
-                      image: const DecorationImage(
-                          image: AssetImage('assets/illustrations/farms.jpg'),
-                          fit: BoxFit.fill)),
-                ),
-                Positioned(
-                  left: width(context) * 0.08,
-                  child: Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                            text: noofFarms.toString(),
-                            style: TextStyle(
-                                fontSize: 65,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white)),
-                        TextSpan(
-                          text: '  FARMS',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              fontSize: 20),
-                        ),
-                      ],
-                    ),
-                  ),
-                )
-              ],
-            ),
-          ),
-          SizedBox(
-            height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 3),
-            child: GridView.builder(
-              // itemCount: horizontalScroll1.length,
-              // gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              //     crossAxisCount: 2,
-              //     crossAxisSpacing: 6.0,
-              //     mainAxisSpacing:6.0,
-              //     //mainAxisSpacing: 4.0,
-              //   childAspectRatio:2/1.8,
-              // ),
-              itemCount: horizontalScroll1.length,
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 200,
-                  childAspectRatio: 3 / 2.5,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10),
-              shrinkWrap: true,
-              physics: ScrollPhysics(),
-              itemBuilder: (BuildContext context, int index) {
-                return GestureDetector(
-                  onTap: () async {
-                    index==0?Navigator.pushNamed(context, '/${index}'):noofFarms != 0
-                        ? Navigator.pushNamed(context, '/${index}')
-                        : QuickAlert.show(
-                        context: context,
-                        type: QuickAlertType.info,
-                        title: await changeLanguage('Information'),
-                    text: await changeLanguage('Please add your farm first...'),
-                    );
-                  },
-                  child: Container(
-                    height: height(context) * 0.18,
-                    width: width(context) * 0.45,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.black38, width: 1),
-                    ),
-                    child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            height: height(context) * 0.07,
-                            width: index == 2
-                                ? width(context) * 0.17
-                                : width(context) * 0.170,
-                            decoration: BoxDecoration(
-                                //color: Colors.black,//Color(color),
-
-                                image: DecorationImage(
-                                    fit: BoxFit.fill,
-                                    image: AssetImage(
-                                      horizontalScroll1[index].image,
-                                    ))),
-                            /* child: Align(
-                                    alignment: Alignment.bottomCenter,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: Text(
-                                        'My Farm Monitoring',
-                                        // style: TextStyle(
-                                        // color: Colors.black,
-                                        // fontSize: 16,
-                                        // fontWeight: FontWeight.w600)
-                                      ),
-                                    )),*/
-                          ),
-                          SizedBox(height: 10),
-                          FutureBuilder(future:changeLanguage(horizontalScroll1[index].name),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                              baseColor: Colors.grey.shade300,
-                              highlightColor: Colors.white,child: Card(
-                            child: SizedBox(
-                              height: height(context)*0.014,
-                              width: width(context)*0.25,
-                            ),
-                          )),)
-                          /*ChangedLanguage(text:horizontalScroll1[index].name,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 16,
-                              )),*/
-                        ]),
-                  ),
-                );
-              },
-            ),
-          ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     GestureDetector(
-          //       onTap: () {
-          //         Navigator.pushNamed(context, '/0');
-          //       },
-          //       child: Container(
-          //         height: height(context) * 0.18,
-          //         width: width(context) * 0.45,
-          //         decoration: BoxDecoration(
-          //           color: Colors.white,
-          //           borderRadius: BorderRadius.circular(10),
-          //           border: Border.all(color: Colors.black38, width: 1),
-          //         ),
-          //         child: Column(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Container(
-          //                 height: height(context) * 0.07,
-          //                 width: width(context) * 0.170,
-          //                 decoration: BoxDecoration(
-          //                   //color: Colors.black,//Color(color),
-          //
-          //                     image: DecorationImage(
-          //                         fit: BoxFit.fill,
-          //                         image: AssetImage(
-          //                           'assets/illustrations/disease_detection.png',
-          //                         ))),
-          //                 /* child: Align(
-          //                         alignment: Alignment.bottomCenter,
-          //                         child: Padding(
-          //                           padding: const EdgeInsets.all(6.0),
-          //                           child: Text(
-          //                             'My Farm Monitoring',
-          //                             // style: TextStyle(
-          //                             // color: Colors.black,
-          //                             // fontSize: 16,
-          //                             // fontWeight: FontWeight.w600)
-          //                           ),
-          //                         )),*/
-          //               ),
-          //               SizedBox(height: 10),
-          //               ChangedLanguage(text:"Disease Advisory",
-          //                   style: TextStyle(
-          //                     fontSize: 16,
-          //                   )),
-          //             ]),
-          //       ),
-          //     ),
-          //     SizedBox(width: 10,),
-          //     GestureDetector(
-          //       onTap: () {
-          //         noofFarms != 0
-          //             ? Navigator.pushNamed(context, '/1')
-          //             : QuickAlert.show(
-          //           context: context,
-          //           type: QuickAlertType.info,
-          //           text: 'Please add your farm first ',
-          //         );
-          //       },
-          //       child: Container(
-          //         height: height(context) * 0.18,
-          //         width: width(context) * 0.45,
-          //         decoration: BoxDecoration(
-          //           color: Colors.white,
-          //           borderRadius: BorderRadius.circular(10),
-          //           border: Border.all(color: Colors.black38, width: 1),
-          //         ),
-          //         child: Column(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Container(
-          //                 height: height(context) * 0.07,
-          //                 width:width(context) * 0.170,
-          //                 decoration: BoxDecoration(
-          //                   //color: Colors.black,//Color(color),
-          //
-          //                     image: DecorationImage(
-          //                         fit: BoxFit.fill,
-          //                         image: AssetImage(
-          //                           "assets/illustrations/farm.png",
-          //                         ))),
-          //                 /* child: Align(
-          //                         alignment: Alignment.bottomCenter,
-          //                         child: Padding(
-          //                           padding: const EdgeInsets.all(6.0),
-          //                           child: Text(
-          //                             'My Farm Monitoring',
-          //                             // style: TextStyle(
-          //                             // color: Colors.black,
-          //                             // fontSize: 16,
-          //                             // fontWeight: FontWeight.w600)
-          //                           ),
-          //                         )),*/
-          //               ),
-          //               SizedBox(height: 10),
-          //               ChangedLanguage(text:"Add Crop",
-          //                   style: TextStyle(
-          //                     fontSize: 16,
-          //                   )),
-          //             ]),
-          //       ),
-          //     )
-          //   ],
-          // ),
-          // SizedBox(
-          //   height: 10,
-          // ),
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   children: [
-          //     GestureDetector(
-          //       onTap: () {
-          //         noofFarms != 0
-          //             ? Navigator.pushNamed(context, '/2')
-          //             : QuickAlert.show(
-          //           context: context,
-          //           type: QuickAlertType.info,
-          //           text: 'Please add your farm first ',
-          //         );
-          //       },
-          //       child: Container(
-          //         height: height(context) * 0.18,
-          //         width: width(context) * 0.45,
-          //         decoration: BoxDecoration(
-          //           color: Colors.white,
-          //           borderRadius: BorderRadius.circular(10),
-          //           border: Border.all(color: Colors.black38, width: 1),
-          //         ),
-          //         child: Column(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Container(
-          //                 height: height(context) * 0.07,
-          //                 width: width(context) * 0.17,
-          //                 decoration: BoxDecoration(
-          //                   //color: Colors.black,//Color(color),
-          //
-          //                     image: DecorationImage(
-          //                         fit: BoxFit.fill,
-          //                         image: AssetImage(
-          //                           'assets/illustrations/scouting.png',
-          //                         ))),
-          //                 /* child: Align(
-          //                         alignment: Alignment.bottomCenter,
-          //                         child: Padding(
-          //                           padding: const EdgeInsets.all(6.0),
-          //                           child: Text(
-          //                             'My Farm Monitoring',
-          //                             // style: TextStyle(
-          //                             // color: Colors.black,
-          //                             // fontSize: 16,
-          //                             // fontWeight: FontWeight.w600)
-          //                           ),
-          //                         )),*/
-          //               ),
-          //               SizedBox(height: 10),
-          //               ChangedLanguage(text:"Scouting",
-          //                   style: TextStyle(
-          //                     fontSize: 16,
-          //                   )),
-          //             ]),
-          //       ),
-          //     ),
-          //     SizedBox(width: 10,),
-          //     GestureDetector(
-          //       onTap: () {
-          //         noofFarms != 0
-          //             ? Navigator.pushNamed(context, '/3')
-          //             : QuickAlert.show(
-          //           context: context,
-          //           type: QuickAlertType.info,
-          //           text: 'Please add your farm first ',
-          //         );
-          //       },
-          //       child: Container(
-          //         height: height(context) * 0.18,
-          //         width: width(context) * 0.45,
-          //         decoration: BoxDecoration(
-          //           color: Colors.white,
-          //           borderRadius: BorderRadius.circular(10),
-          //           border: Border.all(color: Colors.black38, width: 1),
-          //         ),
-          //         child: Column(
-          //             mainAxisAlignment: MainAxisAlignment.center,
-          //             children: [
-          //               Container(
-          //                 height: height(context) * 0.07,
-          //                 width:width(context) * 0.170,
-          //                 decoration: BoxDecoration(
-          //                   //color: Colors.black,//Color(color),
-          //
-          //                     image: DecorationImage(
-          //                         fit: BoxFit.fill,
-          //                         image: AssetImage(
-          //                           "assets/illustrations/agriculture.png",
-          //                         ))),
-          //                 /* child: Align(
-          //                         alignment: Alignment.bottomCenter,
-          //                         child: Padding(
-          //                           padding: const EdgeInsets.all(6.0),
-          //                           child: Text(
-          //                             'My Farm Monitoring',
-          //                             // style: TextStyle(
-          //                             // color: Colors.black,
-          //                             // fontSize: 16,
-          //                             // fontWeight: FontWeight.w600)
-          //                           ),
-          //                         )),*/
-          //               ),
-          //               SizedBox(height: 10),
-          //               ChangedLanguage(text:"Farm Planner",
-          //                   style: TextStyle(
-          //                     fontSize: 16,
-          //                   )),
-          //             ]),
-          //       ),
-          //     )
-          //   ],
-          // ),
-          SizedBox(
-            height: 10,
-          ),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 20),
-          //   child: Row(
-          //     children: [
-          //       InkWell(
-          //         onTap: () {
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) => AddNewFarmsActivity()));
-          //         },
-          //         child: Container(
-          //           width: width(context) * 0.44,
-          //           height: height(context) * 0.056,
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(10),
-          //             border: Border.all(color: Color(0xffECB34F), width: 1),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(horizontal: 10),
-          //           child: Row(
-          //             children: [
-          //               Image.asset(
-          //                 "assets/new_icons/Add Farm.png",
-          //                 height: 45,
-          //                 width: 45,
-          //               ),
-          //               /*const Icon(
-          //                 Icons.message,
-          //                 color: Color(0xffECB34F),
-          //               ),*/
-          //               const SizedBox(
-          //                 width: 10,
-          //               ),
-          //               const Text(
-          //                 'Add Farm',
-          //               ),
-          //               Expanded(
-          //                 child: Container(),
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 size: height(context) * 0.02,
-          //                 color: Color(0xffECB34F),
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //       Expanded(child: SizedBox()),
-          //       InkWell(
-          //         onTap: () {
-          //           noofFarms!=0?
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) =>  AddCropActivity())):
-          //           QuickAlert.show(
-          //             context: context,
-          //             type: QuickAlertType.info,
-          //             text: 'Please add your farm first ',
-          //           );
-          //           // showDialog(
-          //           //     context: context,
-          //           //     builder: (BuildContext context) {
-          //           //       return AlertDialog(
-          //           //         backgroundColor: Colors.red[100],
-          //           //         title: Text("Farm Required"),
-          //           //         content: Text("Please add your farm first"),
-          //           //         actions: <Widget>[
-          //           //           IconButton(
-          //           //               icon: Icon(Icons.check),
-          //           //               onPressed: () {
-          //           //                 Navigator.of(context).pop();
-          //           //               })
-          //           //         ],
-          //           //       );
-          //           //     });
-          //         },
-          //         child: Container(
-          //           width: width(context) * 0.44,
-          //           height: height(context) * 0.056,
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(10),
-          //             border: Border.all(color: Color(0xffECB34F), width: 1),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(horizontal: 10),
-          //           child: Row(
-          //             children: [
-          //               /*const Icon(
-          //                 Icons.message,
-          //                 color: Color(0xffECB34F),
-          //               ),*/
-          //               Image.asset(
-          //                 "assets/new_icons/Add Crops.png",
-          //                 height: 45,
-          //                 width: 45,
-          //               ),
-          //               const SizedBox(
-          //                 width: 10,
-          //               ),
-          //               const Text('Add Crop'),
-          //               Expanded(
-          //                 child: Container(),
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 size: height(context) * 0.02,
-          //                 color: Color(0xffECB34F),
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          // /*InkWell(
-          //         onTap: () {
-          //
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) => MyWebView(uid: uid,api_key: api_key)));
-          //          // launch('http://app.mapmycrop.com/mobile-dashboard.php?user_id=$uid');
-          //         },
-          //         child: Container(
-          //           width: double.maxFinite,
-          //           height: height(context) * 0.05,
-          //           decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(10),
-          //               border: Border.all(color: Color(0xffECB34F), width: 1)),
-          //           padding: const EdgeInsets.symmetric(horizontal: 15),
-          //           child: Row(
-          //             children: [
-          //               const Icon(
-          //                 Icons.message,
-          //                 color: Color(0xffECB34F),
-          //               ),
-          //               const SizedBox(
-          //                 width: 10,
-          //               ),
-          //               const Text('Farms'),
-          //               Expanded(
-          //                 child: Container(),
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 size: height(context) * 0.02,
-          //                 color: Color(0xffECB34F),
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       ),*/
-          // const SizedBox(
-          //   height: 12,
-          // ),
-          // Padding(
-          //   padding: const EdgeInsets.symmetric(horizontal: 20),
-          //   child: Row(
-          //     children: [
-          //       InkWell(
-          //         onTap: () {
-          //           noofFarms!=0?
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) => const ScoutingActivity())):
-          //           QuickAlert.show(
-          //             context: context,
-          //             type: QuickAlertType.info,
-          //             text: 'Please add your farm first ',
-          //           );
-          //         },
-          //         child: Container(
-          //           width: width(context) * 0.44,
-          //           height: height(context) * 0.056,
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(10),
-          //             border: Border.all(color: Color(0xffECB34F), width: 1),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(horizontal: 10),
-          //           child: Row(
-          //             mainAxisAlignment: MainAxisAlignment.start,
-          //             children: [
-          //               Image.asset(
-          //                 "assets/new_icons/Scouting.png",
-          //                 height: 45,
-          //                 width: 45,
-          //               ),
-          //               const SizedBox(
-          //                 width: 10,
-          //               ),
-          //               const Text('Scouting'),
-          //               Expanded(
-          //                 child: Container(),
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 size: height(context) * 0.02,
-          //                 color: Color(0xffECB34F),
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //       Expanded(child: SizedBox()),
-          //       InkWell(
-          //         onTap: () {
-          //           noofFarms!=0?
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) =>  PlannerActivity())):QuickAlert.show(
-          //             context: context,
-          //             type: QuickAlertType.info,
-          //             text: 'Please add your farm first ',
-          //           );
-          //           // showDialog(
-          //           //     context: context,
-          //           //     builder: (BuildContext context) {
-          //           //       return AlertDialog(
-          //           //         backgroundColor: Colors.red[100],
-          //           //         title: Text("Farm Required"),
-          //           //         content: Text("Please add your farm first"),
-          //           //         actions: <Widget>[
-          //           //           IconButton(
-          //           //               icon: Icon(Icons.check),
-          //           //               onPressed: () {
-          //           //                 Navigator.of(context).pop();
-          //           //               })
-          //           //         ],
-          //           //       );
-          //           //     });
-          //         },
-          //         child: Container(
-          //           width: width(context) * 0.44,
-          //           height: height(context) * 0.056,
-          //           decoration: BoxDecoration(
-          //             color: Colors.white,
-          //             borderRadius: BorderRadius.circular(10),
-          //             border: Border.all(color: Color(0xffECB34F), width: 1),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(horizontal: 10),
-          //           child: Row(
-          //             children: [
-          //               Image.asset(
-          //                 "assets/new_icons/Farm Planner.png",
-          //                 height: 45,
-          //                 width: 45,
-          //               ),
-          //               const SizedBox(
-          //                 width: 15,
-          //               ),
-          //               const Text(
-          //                 'Planner',
-          //                 textAlign: TextAlign.center,
-          //               ),
-          //               Expanded(
-          //                 child: const Text(
-          //                   '',
-          //                 ),
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 size: height(context) * 0.02,
-          //                 color: Color(0xffECB34F),
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          // const SizedBox(
-          //   height:5.0,
-          // ),
-          GestureDetector(
-            onTap: () {
-              // Navigator.push(context, MaterialPageRoute(builder: (context)=> FarmIdScreen()));
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => MandiPriceDta()));
-            },
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  // margin: const EdgeInsets.symmetric(horizontal: 20,vertical:10),
-                  height: height(context) * 0.18,
-                  foregroundDecoration: BoxDecoration(
-                    // color: Colors.black26,
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-
-                  //width: width(context) * 0.9,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Color(0xfff9e2ae),
-                        Color(0xfff9e2ae),
-                      ],
-
-                      //borderRadius: BorderRadius.circular(5),
-                    ),
-                    //color: Colors.grey.shade200,
-                    /*child: Align(
-                    alignment: Alignment.center,
-                    child: Container(
-                      height: height(context)*0.07,
-                      width: width(context)*0.45,
-                      //color: Colors.white,
-                      padding: EdgeInsets.all(height(context) * 0.01),
-                      decoration: BoxDecoration(
-                          color: Colors.white24,
-                          //borderRadius: BorderRadius.circular(10)
-                      ),
-                      child: Center(
-                        child: Text(
-                          'Markets',
-                          style: TextStyle(
-                            color: Colors.white,
-                              fontSize: 25, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ),*/
-                  ),
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/illustrations/mandi.jpg',
-                        height: height(context) * 0.175,
-                        width: width(context) * 0.50,
-                        fit: BoxFit.fill,
-                      ),
-                      SizedBox(
-                        width: width(context) * 0.06,
-                      ),
-                      Expanded(
-                        child: ChangedLanguage(text:
-                          'Mandi Rates',
-                          // softWrap: true,
-                          // maxLines: 2,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Colors.black87,
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-            child: Row(
-              children: [
-                Flexible(
-                  flex: 1,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => CropGuideDashboard()));
-                    },
-                    child: Container(
-                      height: height(context) * 0.18,
-                      width: width(context) * 0.45,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black38, width: 1),
-                      ),
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: height(context) * 0.07,
-                              width: width(context) * 0.170,
-                              decoration: BoxDecoration(
-                                  //color: Colors.black,//Color(color),
-
-                                  image: const DecorationImage(
-                                      fit: BoxFit.fill,
-                                      image: AssetImage(
-                                        'assets/illustrations/crop_guide.png',
-                                      ))),
-                              /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
-                            ),
-                            SizedBox(height: 10),
-                            FutureBuilder(future:changeLanguage('Crop Guide'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: Colors.white,child: Card(
-                              child: SizedBox(
-                                height: height(context)*0.014,
-                                width: width(context)*0.25,
-                              ),
-                            )),)
-                            /*ChangedLanguage(text:'Crop Guide',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                )),*/
-                          ]),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Flexible(
-                  flex: 1,
-                  child: GestureDetector(
-                    onTap: () async {
-                      QuickAlert.show(
-                          context: context,
-                          type: QuickAlertType.loading,
-                          text: await changeLanguage("Coming Soon..."));
-
-                      // Navigator.push(
-                      //     context,
-                      //     MaterialPageRoute(
-                      //         builder: (context) => const CommunityWebview()));
-                    },
-                    child: Container(
-                      height: height(context) * 0.18,
-                      width: width(context) * 0.45,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black38, width: 1),
-                      ),
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: height(context) * 0.07,
-                              width: width(context) * 0.170,
-                              decoration: BoxDecoration(
-                                  //color: Colors.black,//Color(color),
-
-                                  image: const DecorationImage(
-                                      fit: BoxFit.fill,
-                                      image: AssetImage(
-                                        'assets/illustrations/contactus.png',
-                                      ))),
-                              /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
-                            ),
-                            SizedBox(height: 10),
-                            FutureBuilder(future:changeLanguage('Community'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: Colors.white,child: Card(
-                              child: SizedBox(
-                                height: height(context)*0.014,
-                                width: width(context)*0.25,
-                              ),
-                            )),),
-                            /*ChangedLanguage(text:'Community',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                )),*/
-                          ]),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(
-            height: 5.0,
-          ),
-          // SizedBox(
-          //   width: width(context) * 0.9,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //     children: [
-          //       const Text("Crop Guide",
-          //           style:
-          //               TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          //       InkWell(
-          //         onTap: () {
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) => CropGuideDashboard()));
-          //         },
-          //         child: Container(
-          //           margin: const EdgeInsets.symmetric(vertical: 10),
-          //           padding: const EdgeInsets.symmetric(
-          //               horizontal: 15, vertical: 5),
-          //           decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(15)),
-          //           child: Row(
-          //             children: const [
-          //               Text('More'),
-          //               SizedBox(
-          //                 width: 5,
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 color: Color(0xffECB34F),
-          //                 size: 15,
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ),
-          GestureDetector(
-            onTap: () async {
-              QuickAlert.show(
-                  context: context,
-                  type: QuickAlertType.loading,
-                  text: await changeLanguage("Coming Soon..."));
-              // Navigator.push(
-              //     context,
-              //     MaterialPageRoute(
-              //         builder: (context) => DiseaseDetectionActivity()));
-            },
-            child: Container(
-              padding:EdgeInsets.only(bottom: 5),
-              color:Color(0xfffbdb5b),
-              height: height(context) * 0.16,
-              width: width(context),
-              child: FittedBox(
-                fit: BoxFit.fill,
-                child: ClipRect(
-                  child: Container(
-                    child: Align(
-                      alignment: Alignment(-0.1, -0.5),
-                      widthFactor: 1.1,
-                      heightFactor: 0.7,
-                      child: Image.asset(
-                          'assets/illustrations/6.png'),
-                    ),
-                  ),
-                ),
               ),
-            ),
-
-
-            // Container(
-            //   height: height(context) * 0.2,
-            //   width: width(context),
-            //
-            //   //padding: EdgeInsets.only(top:10),
-            //   //margin: const EdgeInsets.symmetric(horizontal: 20),
-            //   /*foregroundDecoration: BoxDecoration(
-            //       // color: Colors.black26
-            //       ),*/
-            //   decoration: BoxDecoration(
-            //       color: Color(0xfffbdb5b),
-            //       // borderRadius: BorderRadius.circular(10),
-            //      /* image: DecorationImage(
-            //           //opacity: 0.7,
-            //           image: AssetImage(
-            //               'assets/illustrations/5.png'), //AssetImage('assets/images/soilTemp.jpg'),
-            //           fit: BoxFit.fill)*/),
-            //   child:Center(child: ClipRect(child: Image.asset('assets/illustrations/6.png',width:width(context)*0.93,height:height(context)*0.2,fit:BoxFit.fill)))
-            //   /*child: Column(
-            //     mainAxisAlignment: MainAxisAlignment.end,
-            //     children: [
-            //       Container(
-            //         //color: Colors.white,
-            //         padding: EdgeInsets.symmetric(Y
-            //             horizontal: height(context) * 0.02),
-            //         decoration: BoxDecoration(
-            //             color: Colors.white24,
-            //             borderRadius: BorderRadius.circular(4)),
-            //         child: Text(
-            //           'Coming soon....',
-            //           style: TextStyle(
-            //             color: Colors.white,
-            //               fontSize: 15, fontWeight: FontWeight.bold),
-            //         ),
-            //       ),
-            //       SizedBox(
-            //         height: 23,
-            //       ),
-            //     ],
-            //   ),*/
-            // ),
-          ),
-          const SizedBox(
-            height: 5.0,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10),
-            child: Row(
-              children: [
-                Flexible(
-                  flex: 1,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => SelfProduce()));
-
-
+              // const SizedBox(
+              //   height: 5.0,
+              // ),
+              // SizedBox(
+              //   width: width(context) * 0.9,
+              //   child: Row(
+              //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //     children: [
+              //       const Text("Community",
+              //           style:
+              //               TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              //       InkWell(
+              //         onTap: () {
+              //           Navigator.push(
+              //               context,
+              //               MaterialPageRoute(
+              //                   builder: (context) => const CommunityWebview()));
+              //         },
+              //         child: Container(
+              //           margin: const EdgeInsets.symmetric(vertical: 10),
+              //           padding: const EdgeInsets.symmetric(
+              //               horizontal: 15, vertical: 5),
+              //           decoration: BoxDecoration(
+              //               color: Colors.white,
+              //               borderRadius: BorderRadius.circular(15)),
+              //           child: Row(
+              //             children: const [
+              //               Text('See all'),
+              //               SizedBox(
+              //                 width: 5,
+              //               ),
+              //               Icon(
+              //                 Icons.arrow_forward_ios,
+              //                 color: Color(0xffECB34F),
+              //                 size: 15,
+              //               )
+              //             ],
+              //           ),
+              //         ),
+              //       )
+              //     ],
+              //   ),
+              // ),
+              GestureDetector(
+                onTap: () {
+                  FirebaseAnalytics.instance.logEvent(
+                    name: "fertilizer_calculator",
+                    parameters: {
+                      "content_type": "Activity_planned",
+                      "api_key": api_key,
                     },
-                    child: Container(
+                  ).onError((error, stackTrace) =>
+                      print('analytics error is $error'));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context)=> FarmIdScreen()));
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              const FertilizerCalculaterActivity()));
+                },
+                child: Stack(
+                  alignment: Alignment.topRight,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.symmetric(
+                          vertical: 10, horizontal: 20),
                       height: height(context) * 0.18,
-                      width: width(context) * 0.45,
+                      width: width(context),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black38, width: 1),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.grey.shade300,
+                                offset: Offset(10, 10),
+                                blurRadius: 12,
+                                spreadRadius: 0)
+                          ]
+                          //borderRadius: BorderRadius.circular(10),
+                          /*image: DecorationImage(
+                        //opacity: 0.8,
+                        //image: SvgPicture.asset('assets/illustrations/FertilizerRecommendation.jpg'),
+                        fit: BoxFit.fill,
+                        colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.82), BlendMode.dstATop),
+                      )*/
+                          ),
+                      child: SvgPicture.asset(
+                        'assets/svgImages/Fertilizer.svg',
+                        fit: BoxFit.fill,
+                        width: width(context),
                       ),
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: height(context) * 0.07,
-                              width: width(context) * 0.170,
-                              decoration: BoxDecoration(
-                                  //color: Colors.black,//Color(color),
 
-                                  image: const DecorationImage(
-                                      fit: BoxFit.fill,
-                                      image: AssetImage(
-                                        'assets/illustrations/solar-energy.png',
-                                      ))),
-                              /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
+                      //color: Colors.grey.shade200,
+                      /*child: Align(
+                        alignment: Alignment.center,
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10.0),
+                          child: Container(
+                            //color: Colors.white,
+                            padding: EdgeInsets.symmetric(
+                                horizontal: height(context) * 0.02),
+                            decoration: BoxDecoration(
+                                color: Colors.white70,
+                                borderRadius: BorderRadius.circular(4)),
+                            child: Text(
+                              'Fertilizer Recommendation',
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.bold),
                             ),
-                            SizedBox(height: 10),
-                            FutureBuilder(future:changeLanguage('Sell Produce'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: Colors.white,child: Card(
-                              child: SizedBox(
-                                height: height(context)*0.014,
-                                width: width(context)*0.25,
-                              ),
-                            )),)
-                            /*ChangedLanguage(text:'Sell Produce',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                )),*/
-                          ]),
+                          ),
+                        ),
+                      ),*/
                     ),
-                  ),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Flexible(
-                  flex: 1,
-                  child: GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const ExpertCall()));
-                    },
-                    child: Container(
-                      height: height(context) * 0.18,
-                      width: width(context) * 0.45,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black38, width: 1),
-                      ),
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              height: height(context) * 0.07,
-                              width: width(context) * 0.170,
-                              decoration: BoxDecoration(
-                                  //color: Colors.black,//Color(color),
-
-                                  image: const DecorationImage(
-                                      fit: BoxFit.fill,
-                                      image: AssetImage(
-                                        'assets/illustrations/carrot.png',
-                                      ))),
-                              /* child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(6.0),
-                                    child: Text(
-                                      'My Farm Monitoring',
-                                      // style: TextStyle(
-                                      // color: Colors.black,
-                                      // fontSize: 16,
-                                      // fontWeight: FontWeight.w600)
-                                    ),
-                                  )),*/
-                            ),
-                            SizedBox(height: 10),
-                            FutureBuilder(future:changeLanguage('Schedule Call'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(fontWeight: FontWeight.w500,fontSize: 16.0),):Shimmer.fromColors(
-                                baseColor: Colors.grey.shade300,
-                                highlightColor: Colors.white,child: Card(
-                              child: SizedBox(
-                                height: height(context)*0.014,
-                                width: width(context)*0.25,
-                              ),
-                            )),)
-                            /*ChangedLanguage(text:'Schedule Call',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                )),*/
-                          ]),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // const SizedBox(
-          //   height: 5.0,
-          // ),
-          // SizedBox(
-          //   width: width(context) * 0.9,
-          //   child: Row(
-          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          //     children: [
-          //       const Text("Community",
-          //           style:
-          //               TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          //       InkWell(
-          //         onTap: () {
-          //           Navigator.push(
-          //               context,
-          //               MaterialPageRoute(
-          //                   builder: (context) => const CommunityWebview()));
-          //         },
-          //         child: Container(
-          //           margin: const EdgeInsets.symmetric(vertical: 10),
-          //           padding: const EdgeInsets.symmetric(
-          //               horizontal: 15, vertical: 5),
-          //           decoration: BoxDecoration(
-          //               color: Colors.white,
-          //               borderRadius: BorderRadius.circular(15)),
-          //           child: Row(
-          //             children: const [
-          //               Text('See all'),
-          //               SizedBox(
-          //                 width: 5,
-          //               ),
-          //               Icon(
-          //                 Icons.arrow_forward_ios,
-          //                 color: Color(0xffECB34F),
-          //                 size: 15,
-          //               )
-          //             ],
-          //           ),
-          //         ),
-          //       )
-          //     ],
-          //   ),
-          // ),
-          GestureDetector(
-            onTap: () {
-              // Navigator.push(context, MaterialPageRoute(builder: (context)=> FarmIdScreen()));
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) =>
-                          const FertilizerCalculaterActivity()));
-            },
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: 15),
-                  height: height(context) * 0.18,
-                  //width: width(context) * 0.9,
-                  decoration: BoxDecoration(
-                      //borderRadius: BorderRadius.circular(10),
-                      image: DecorationImage(
-                    //opacity: 0.8,
-                    image: AssetImage('assets/illustrations/FertilizerRecommendation.jpg'),
-                    fit: BoxFit.fill,
-                    colorFilter: ColorFilter.mode(
-                        Colors.black.withOpacity(0.82), BlendMode.dstATop),
-                  )),
-                  //color: Colors.grey.shade200,
-                  /*child: Align(
-                    alignment: Alignment.center,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10.0),
+                    Positioned(
+                      top: height(context)*0.01,
+                      right: width(context)*0.05,
                       child: Container(
+
+                        height: height(context)*0.04,
+                        width: width(context)*0.51,
+                        child: Center(
+                          child: languageText(
+                            'Fertilizer Recommendation',
+                             TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xff585858)),
+                          ),
+                        ),
+                      ),
+                    ),
+                    /*Positioned(
+                      bottom: 10,
+                      child: Container(
+                        width: width(context),
                         //color: Colors.white,
                         padding: EdgeInsets.symmetric(
                             horizontal: height(context) * 0.02),
                         decoration: BoxDecoration(
-                            color: Colors.white70,
-                            borderRadius: BorderRadius.circular(4)),
-                        child: Text(
-                          'Fertilizer Recommendation',
-                          style: TextStyle(
-                              fontSize: 16, fontWeight: FontWeight.bold),
+                          color: Colors.white,
+                          // borderRadius: BorderRadius.only(bottomLeft:Radius.circular(10),bottomRight:Radius.circular(10))
+                        ),
+                        child: Center(
+                          child: ChangedLanguage(
+                            text: 'Fertilizer Recommendation',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ),
-                    ),
-                  ),*/
+                    ),*/
+                  ],
                 ),
-                Positioned(
-                  bottom: 10,
-                  child: Container(
-                    width: width(context),
-                    //color: Colors.white,
-                    padding: EdgeInsets.symmetric(
-                        horizontal: height(context) * 0.02),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      // borderRadius: BorderRadius.only(bottomLeft:Radius.circular(10),bottomRight:Radius.circular(10))
-                    ),
-                    child: Center(
-                      child: ChangedLanguage(text:
-                        'Fertilizer Recommendation',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
+              ),
+
+              SizedBox(height: 10),
+
+              /*GestureDetector(
+          onTap: () {
+            Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        const FertilizerCalculaterActivity()));
+          },
+          child: Container(
+            margin:
+                const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                // boxShadow: [
+                //   BoxShadow(
+                //     color: Colors.grey.shade500,
+                //     blurRadius: 5,
+                //     spreadRadius: 0,
+                //   ),
+                // ]
+            ),
+            width: width(context) * 0.9,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Fertilizer Recommendation',
+                  style:
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
                 ),
+                const SizedBox(
+                  height: 10,
+                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.end,
+                //   children: const [
+                //     Text(
+                //       '11 Nov 2022',
+                //       style: TextStyle(fontSize: 10, color: Colors.grey),
+                //     )
+                //   ],
+                // ),
+                Container(
+                  width: width(context) * 0.9,
+                  height: height(context) * 0.2,
+                  // color: Colors.grey.shade400,
+                  decoration: const BoxDecoration(
+                      image: DecorationImage(
+                          image: AssetImage(
+                              'assets/Banners/Fertilizers Recommodations.png'),
+                          fit: BoxFit.fill)),
+                )
               ],
             ),
           ),
-          SizedBox(height:10)
-          /*GestureDetector(
-      onTap: () {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    const FertilizerCalculaterActivity()));
-      },
-      child: Container(
-        margin:
-            const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(10),
-            // boxShadow: [
-            //   BoxShadow(
-            //     color: Colors.grey.shade500,
-            //     blurRadius: 5,
-            //     spreadRadius: 0,
-            //   ),
-            // ]
-        ),
-        width: width(context) * 0.9,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Fertilizer Recommendation',
-              style:
-                  TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            const SizedBox(
-              height: 10,
-            ),
-            // Row(
-            //   mainAxisAlignment: MainAxisAlignment.end,
-            //   children: const [
-            //     Text(
-            //       '11 Nov 2022',
-            //       style: TextStyle(fontSize: 10, color: Colors.grey),
-            //     )
-            //   ],
-            // ),
-            Container(
-              width: width(context) * 0.9,
-              height: height(context) * 0.2,
-              // color: Colors.grey.shade400,
-              decoration: const BoxDecoration(
-                  image: DecorationImage(
-                      image: AssetImage(
-                          'assets/Banners/Fertilizers Recommodations.png'),
-                      fit: BoxFit.fill)),
-            )
-          ],
-        ),
-      ),
-        )*/
+            )*/
+            ],
+          ),
+          FutureBuilder(
+              future: internetConnection(),
+              builder: (context, snapshot) {
+                return snapshot.hasData
+                    ? snapshot.data == true
+                        ? Container()
+                        : Container(
+                            height: 20,
+                            width: width(context),
+                            color: Colors.red,
+                            child: Center(
+                                child: Text(
+                              'You are offline make sure you\'re connected',
+                              style: TextStyle(color: Colors.white),
+                            )),
+                          )
+                    : Container();
+              }),
         ],
       ),
-     /* bottomNavigationBar: CurvedNavigationBar(
+      /* bottomNavigationBar: CurvedNavigationBar(
        // key: _bottomNavigationKey,
         index: 1,
         height: 60,
@@ -2608,7 +3519,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
       ),*/
       //bottomNavigationBar: ,
       bottomNavigationBar: CircleNavBar(
-        activeIcons:  [
+        activeIcons: [
           Container(
             height: 70,
             width: 70,
@@ -2634,15 +3545,18 @@ class _DashboardActivityState extends State<DashboardActivity> {
             ),
           ).onTap(() {
             // showNotification();
-             Navigator.push((context), MaterialPageRoute(builder: (context)=>NewDashBoard()));
+            // Navigator.push((context), MaterialPageRoute(builder: (context)=>Mmc_HomePage(farmList: farmnames,)));
+            Navigator.push((context),
+                MaterialPageRoute(builder: (context) => VideoList()));
+            //Navigator.push((context), MaterialPageRoute(builder: (context)=>MandiPriceDta1()));
+            // few clouds Navigator.push((context), MaterialPageRoute(builder: (context)=>Mmc_HomePage(farmList: farmnames,)));
             // Navigator.of(context).push(
-            //     MaterialPageRoute(builder: (_) => OverlayImagePage()));
+            //     MaterialPageRoute(builder: (_) => autoCompletePlaces()));
           }),
           Container(
             height: 70,
             width: 70,
             alignment: Alignment.center,
-
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               border: Border.all(width: 2, color: Colors.orange),
@@ -2651,11 +3565,11 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       'assets/new_images/logo.png')), //CachedNetworkImageProvider('https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcTD8u1Nmrk78DSX0v2i_wTgS6tW5yvHSD7o6g&usqp=CAU')),
             ),
           ),
-
         ],
-        inactiveIcons:  [
+        inactiveIcons: [
           Icon(Icons.call, color: Colors.orange).onTap(() async {
-            Navigator.push(context, MaterialPageRoute(builder: (context)=>ExpertCall()));
+            Navigator.push(
+                context, MaterialPageRoute(builder: (context) => ExpertCall()));
           }),
           Text("Home"),
           Icon(Icons.chat, color: Colors.orange).onTap(() async {
@@ -2671,7 +3585,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
         //   // TODO
         // },
         // tabCurve: ,
-        padding: const EdgeInsets.only(left:0, right:0, bottom:0),
+        padding: const EdgeInsets.only(left: 0, right: 0, bottom: 0),
         cornerRadius: const BorderRadius.only(
           topLeft: Radius.circular(8),
           topRight: Radius.circular(8),
@@ -2741,7 +3655,7 @@ class _DashboardActivityState extends State<DashboardActivity> {
                         },
                       ),
                     ),*/
-                    SizedBox(height:50),
+                    SizedBox(height: 50),
                     Container(
                       height: 70,
                       width: 70,
@@ -2759,7 +3673,9 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     //   "John Dow",
                     //   style: TextStyle(color: Color(0xFF212121), fontSize: 18.0, fontWeight: FontWeight.w600),
                     // ),
-                    Text(phone != null ?? phone ? email : '',
+                    Text(
+                        //phone != null ?? phone ? email : ''
+                        phone ?? email ?? '',
                         style: TextStyle(
                             color: Color(0xFF212121), fontSize: 16.0)),
                     30.height,
@@ -2771,16 +3687,25 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     // 15.height,
                     Row(
                       children: [
-                        Icon(Icons.message),
+                        Icon(Icons.notifications_none_rounded),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Messages'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
+                        FutureBuilder(
+                          future: changeLanguage('Notifications'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
                         /*ChangedLanguage(text:"Messages",
                             style: TextStyle(color: Color(0xFF212121))),*/
                       ],
@@ -2815,16 +3740,25 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       children: [
                         Icon(Icons.sunny),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Weather'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
+                        FutureBuilder(
+                          future: changeLanguage('Weather'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
 
-                       /* ChangedLanguage(text:"Weather",
+                        /* ChangedLanguage(text:"Weather",
                             style: TextStyle(color: Color(0xFF212121))),*/
                       ],
                     ).onTap(() {
@@ -2852,16 +3786,25 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     10.height,*/
                     Row(
                       children: [
-                        Icon(Icons.bookmark),
+                        Icon(Icons.bookmark_border_outlined),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Knowledge Base'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
+                        FutureBuilder(
+                          future: changeLanguage('Knowledge Base'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
 
                         /*ChangedLanguage(text:"Knowledge Base",
                             style: TextStyle(color: Color(0xFF212121))),*/
@@ -2876,16 +3819,25 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     10.height,
                     Row(
                       children: [
-                        Icon(Icons.bookmark),
+                        Icon(Icons.handshake_outlined),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Contact Us'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
+                        FutureBuilder(
+                          future: changeLanguage('Contact Us'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
 
                         /*ChangedLanguage(text:"Contact us",
                             style: TextStyle(color: Color(0xFF212121))),*/
@@ -2905,16 +3857,25 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     // 15.height,
                     Row(
                       children: [
-                        Icon(Icons.feedback),
+                        Icon(Icons.feedback_outlined),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Feedback'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
+                        FutureBuilder(
+                          future: changeLanguage('Feedback'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
 
                         /*ChangedLanguage(text:"Feedback",
                             style: TextStyle(color: Color(0xFF212121))),*/
@@ -2933,15 +3894,24 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       children: [
                         Icon(Icons.share),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Share App'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
-                /*ChangedLanguage(text:"Share app",
+                        FutureBuilder(
+                          future: changeLanguage('Share App'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
+                        /*ChangedLanguage(text:"Share app",
                             style: TextStyle(color: Color(0xFF212121))),*/
                       ],
                     ).onTap(() {
@@ -2953,17 +3923,28 @@ class _DashboardActivityState extends State<DashboardActivity> {
                     10.height,
                     Row(
                       children: [
-                        Icon(Icons.feedback),
+                        Icon(
+                          Icons.star_half_sharp,
+                        ),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Feedback'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),)
-   /* ChangedLanguage(text:"Rate us",
+                        FutureBuilder(
+                          future: changeLanguage('Rate us'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.25,
+                                    ),
+                                  )),
+                        )
+                        /* ChangedLanguage(text:"Rate us",
                             style: TextStyle(color: Color(0xFF212121))),*/
                       ],
                     ).onTap(() {
@@ -2989,57 +3970,66 @@ class _DashboardActivityState extends State<DashboardActivity> {
                       children: [
                         Icon(Icons.language),
                         10.width,
-                        FutureBuilder(future:changeLanguage('Language'),builder: (context,i)=> i.hasData?Text(i.data,style: TextStyle(color: Color(0xFF212121)),):Shimmer.fromColors(
-                            baseColor: Colors.grey.shade300,
-                            highlightColor: Colors.white,child: Card(
-                          child: SizedBox(
-                            height: height(context)*0.014,
-                            width: width(context)*0.25,
-                          ),
-                        )),),
+                        FutureBuilder(
+                          future: changeLanguage('Language'),
+                          builder: (context, i) => i.hasData
+                              ? Text(
+                                  i.data,
+                                  style: TextStyle(color: Color(0xFF212121)),
+                                )
+                              : Shimmer.fromColors(
+                                  baseColor: Colors.grey.shade300,
+                                  highlightColor: Colors.white,
+                                  child: Card(
+                                    child: SizedBox(
+                                      height: height(context) * 0.014,
+                                      width: width(context) * 0.15,
+                                    ),
+                                  )),
+                        ),
                         /*ChangedLanguage(text:'Language',
                             style: TextStyle(color: Color(0xFF212121))),*/
                         20.width,
                         SizedBox(
                           height: 25,
                           child:
-                            //    DropdownButtonHideUnderline(
-                                    //     child: DropdownButton<String>(
-                                    //       //focusNode: emailIDFocusNode,
-                                    //       hint: Padding(
-                                    //         padding: const EdgeInsets.only(left: 8.0),
-                                    //         child: ChangedLanguage(text:'Select'),
-                                    //       ),
-                                    //       value: selectedLanguage,
-                                    //       elevation: 25,
-                                    //       isExpanded: true,
-                                    //       icon: Icon(Icons.arrow_drop_down_circle),
-                                    //       items: Languages.map((String value) {
-                                    //         return DropdownMenuItem<String>(
-                                    //           value: value,
-                                    //           child: Center(
-                                    //               child: ChangedLanguage(text:
-                                    //               value,
-                                    //                 style: TextStyle(fontWeight: FontWeight.w500),
-                                    //               )),
-                                    //         );
-                                    //       }).toList(),
-                                    //       onChanged: (String newvalue) async {
-                                    //         SharedPreferences prefs = await SharedPreferences.getInstance();
-                                    //         setState(() {
-                                    //           selectedLanguage=newvalue;
-                                    //           var index = Languages.indexOf(newvalue);
-                                    //           prefs.setString('language', LanguageCodes[index]);
-                                    //           //Navigator.pop(context);
-                                    //         });
-                                    //         Navigator.pushReplacement(
-                                    //             context,
-                                    //             MaterialPageRoute(
-                                    //                 builder: (BuildContext context) => super.widget));
-                                    //       },
-                                    //     ),
-                                    //   )
-                          DropdownButtonHideUnderline(
+                              //    DropdownButtonHideUnderline(
+                              //     child: DropdownButton<String>(
+                              //       //focusNode: emailIDFocusNode,
+                              //       hint: Padding(
+                              //         padding: const EdgeInsets.only(left: 8.0),
+                              //         child: ChangedLanguage(text:'Select'),
+                              //       ),
+                              //       value: selectedLanguage,
+                              //       elevation: 25,
+                              //       isExpanded: true,
+                              //       icon: Icon(Icons.arrow_drop_down_circle),
+                              //       items: Languages.map((String value) {
+                              //         return DropdownMenuItem<String>(
+                              //           value: value,
+                              //           child: Center(
+                              //               child: ChangedLanguage(text:
+                              //               value,
+                              //                 style: TextStyle(fontWeight: FontWeight.w500),
+                              //               )),
+                              //         );
+                              //       }).toList(),
+                              //       onChanged: (String newvalue) async {
+                              //         SharedPreferences prefs = await SharedPreferences.getInstance();
+                              //         setState(() {
+                              //           selectedLanguage=newvalue;
+                              //           var index = Languages.indexOf(newvalue);
+                              //           prefs.setString('language', LanguageCodes[index]);
+                              //           //Navigator.pop(context);
+                              //         });
+                              //         Navigator.pushReplacement(
+                              //             context,
+                              //             MaterialPageRoute(
+                              //                 builder: (BuildContext context) => super.widget));
+                              //       },
+                              //     ),
+                              //   )
+                              DropdownButtonHideUnderline(
                             child: ButtonTheme(
                               // minWidth: 40,
                               // height: 25,
@@ -3047,10 +4037,13 @@ class _DashboardActivityState extends State<DashboardActivity> {
                               child: DropdownButton(
                                 ///dropdown.dart change line no 518 set selectedItemOffset = -40
                                 dropdownColor: Colors.grey.shade100,
-                                menuMaxHeight: height(context)*0.2,
-                                borderRadius:BorderRadius.circular(15),
+                                menuMaxHeight: height(context) * 0.2,
+                                borderRadius: BorderRadius.circular(15),
                                 //underline: Divider(),
-                                hint: Text(currentLanguage, style: TextStyle(fontSize: 14,color: Color(0xFF212121))),
+                                hint: Text(currentLanguage,
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        color: Color(0xFF212121))),
                                 //value: currentLanguage,
                                 items: Languages.map((String value) {
                                   return DropdownMenuItem<String>(
@@ -3061,15 +4054,20 @@ class _DashboardActivityState extends State<DashboardActivity> {
                                       ));
                                 }).toList(),
                                 onChanged: (value) async {
-                                  SharedPreferences prefs = await SharedPreferences.getInstance();
+                                  SharedPreferences prefs =
+                                      await SharedPreferences.getInstance();
                                   setState(() {
                                     var index = Languages.indexOf(value);
-                                    prefs.setString('language', LanguageCodes[index]);
+                                    prefs.setString(
+                                        'language', LanguageCodes[index]);
                                     currentLanguage = value;
+                               //     getGlobalCropList(prefs.getString('api_key'));
                                     Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (BuildContext context) => super.widget));
+                                            builder: (BuildContext context) =>
+                                                super.widget));
+
                                     //print(selectedLanguage);
                                     //Navigator.pop(context);
                                   });
@@ -3437,7 +4435,6 @@ class _DashboardActivityState extends State<DashboardActivity> {
     return Future.value(true);
   }
 
-
   Future<void> share() async {
     await FlutterShare.share(
         title: 'Map My Crop',
@@ -3452,108 +4449,111 @@ class _DashboardActivityState extends State<DashboardActivity> {
         context: context,
         builder: (BuildContext context) {
           return StatefulBuilder(
-              builder: (BuildContext context,
-                  StateSetter setState) {
-                return AlertDialog(
-                  title: Center(
-                    child: Text(
-                      'Change app language',
-                      style: const TextStyle(
-                        color: Color(0xcc000000),
-                        fontSize: 17,
-                        fontFamily: "Inter",
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+              builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: Center(
+                child: Text(
+                  'Change app language',
+                  style: const TextStyle(
+                    color: Color(0xcc000000),
+                    fontSize: 17,
+                    /*fontFamily: "Inter"*/
+                    fontWeight: FontWeight.w600,
                   ),
-                  //Text(S.of(context).change), //Text("Change app language"),
-                  actions: <Widget>[
-                    Center(
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: 200.0,
-                            child: MaterialButton(
-                              onPressed: () async {
-                                SharedPreferences prefs =
+                ),
+              ),
+              //Text(S.of(context).change), //Text("Change app language"),
+              actions: <Widget>[
+                Center(
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        width: 200.0,
+                        child: MaterialButton(
+                          onPressed: () async {
+                            SharedPreferences prefs =
                                 await SharedPreferences.getInstance();
-                                setState(() {
-                                  prefs.setString('language', "mr");
-                                  //Navigator.pop(context);
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) => super.widget));
-                                });
-                              },
-                              child: Text(
-                                "Marathi",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              color: Colors.green,
+                            setState(() {
+                              prefs.setString('language', "mr");
+                              //Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          super.widget));
+                            });
+                          },
+                          child: Text(
+                            "Marathi",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
                             ),
                           ),
-                          SizedBox(
-                            width: 200.0,
-                            child: MaterialButton(
-                              onPressed: () async {
-                                SharedPreferences prefs =
-                                await SharedPreferences.getInstance();
-                                setState(() {
-                                  prefs.setString('language', "hi");
-                                  //Navigator.pop(context);
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) => super.widget));
-                                });
-                              },
-                              child: Text(
-                                 "Hindi",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              color: const Color(0xffECB34F),
-                            ),
-                          ),
-                          SizedBox(
-                            width: 200.0,
-                            child: MaterialButton(
-                              onPressed: () async {
-                                SharedPreferences prefs =
-                                await SharedPreferences.getInstance();
-                                setState(() {
-                                  prefs.setString('language', "en");
-                                  //Navigator.pop(context);
-                                  Navigator.pushReplacement(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (BuildContext context) => super.widget));
-                                });
-                              },
-                              child: Text(
-                                 "English",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 17,
-                                ),
-                              ),
-                              color: const Color(0xfff7941e),
-                            ),
-                          ),
-                        ],
+                          color: Colors.green,
+                        ),
                       ),
-                    ),
-                  ],
-                );
-              });}
-          );
-        }
+                      SizedBox(
+                        width: 200.0,
+                        child: MaterialButton(
+                          onPressed: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            setState(() {
+                              prefs.setString('language', "hi");
+                              //Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          super.widget));
+                            });
+                          },
+                          child: Text(
+                            "Hindi",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                            ),
+                          ),
+                          color: const Color(0xffECB34F),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 200.0,
+                        child: MaterialButton(
+                          onPressed: () async {
+                            SharedPreferences prefs =
+                                await SharedPreferences.getInstance();
+                            setState(() {
+                              prefs.setString('language', "en");
+                              //Navigator.pop(context);
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (BuildContext context) =>
+                                          super.widget));
+                            });
+                           // getGlobalCropList(prefs.getString('api_key'));
+                          },
+                          child: Text(
+                            "English",
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 17,
+                            ),
+                          ),
+                          color: const Color(0xfff7941e),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          });
+        });
+  }
 }
 
 class OvalRightBorderClipper extends CustomClipper<Path> {

@@ -1607,7 +1607,7 @@ class _WeatherAppState extends State<WeatherApp>
             style: TextStyle(
               color: Colors.white,
               fontSize: 15,
-              fontFamily: "Inter",
+              /*fontFamily: "Inter"*/
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -2348,13 +2348,21 @@ class WeatherData {
     var api_key = prefs.getString('api_key');
     var response1 = await http.get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     var data = jsonDecode(response1.body);
-    //print(data);
-    if(data['features'].length>0){
-    for (int i = 0; i < data['features'].length; i++) {
-      farmlatlong.add(data['features'][i]['geometry']['coordinates'][0][0]);
+   // print(data);
+    if(data.length>0){
+    for (int i = 0; i < data.length; i++) {
+      data[i]['id'];
+      var singleFarmResponse = await http.get(Uri.parse('https://api.mapmycrop.com/farm/${data[i]['id']}?api_key=$api_key'));
+      var singleFarmData = jsonDecode(singleFarmResponse.body);
+
+      farmlatlong.add(singleFarmData['features'][0]['properties']['center']['coordinates']);
+
+
       //farmlatlong.add(data['features'][0]['geometry']['coordinates'][0][0][1]);
       //print(farmlatlong[i]);
     }
+    print(farmlatlong);
+
     currentTemperatures.clear();
     currentHumiditys.clear();
     currentPressures.clear();
@@ -2374,7 +2382,7 @@ class WeatherData {
         latitude=farmlatlong[i][1];
         //print('latitude = $latitude \n longitude = $longitude');
         final response = await http.get(Uri.parse('http://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=${apiKey}&units=metric'));
-        // print(response.body);
+         // print(response.body);
         if (response.statusCode == 200) {
           String data = response.body;
           //print(data);
@@ -2414,17 +2422,19 @@ class WeatherData {
             print(e);
           }
         } else {
-          print('Could not fetch temperature!');
+          // print('Could not fetch temperature!');
         }
       }
-    }else{
+      print(currentIcons);
+     }else{
       print('were in else now');
       LocationHelper locationHelper = LocationHelper();
+     await locationHelper.getCurrentLocation();
       longitude= locationHelper.longitude;
       latitude= locationHelper.latitude;
       print('latitude = $latitude \n longitude = $longitude');
       final response = await http.get(Uri.parse('http://api.openweathermap.org/data/2.5/weather?lat=$latitude&lon=$longitude&appid=${apiKey}&units=metric'));
-      print(response.body);
+      // print(response.body);
       if (response.statusCode == 200) {
         String data = response.body;
         //print(data);
@@ -2464,7 +2474,7 @@ class WeatherData {
           print(e);
         }
       } else {
-        print('Could not fetch temperature!');
+        // print('Could not fetch temperature!');
       }
     }
 
@@ -2557,7 +2567,7 @@ class WeatherData {
           print(e);
         }
       } else {
-        print('Could not fetch temperature!');
+        // print('Could not fetch temperature!');
       }
     }
     //http://api.openweathermap.org/data/2.5/weather?id=${weatherCity}&appid=${apiKey}&units=metric'

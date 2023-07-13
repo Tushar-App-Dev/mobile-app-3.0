@@ -109,6 +109,26 @@ class _ExpertCallState extends State<ExpertCall> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        centerTitle: false,
+        backgroundColor: Color(0xffECB34F),
+        title: languageText(
+        "Schedule a call",
+           TextStyle(
+            color: Colors.white,
+            fontSize: 15,
+            fontFamily: "Inter",
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        leading: InkWell(
+            onTap: (){
+              Navigator.pop(context);
+              print("Tusharhi".substring('Tusharhi'.length-2,'Tusharhi'.length));
+            },
+            child: Image.asset('assets/new_images/back.png')
+        ),
+      ),
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.grey.shade50,//Color(0XFFECB34F),
       body: Form(
@@ -119,14 +139,13 @@ class _ExpertCallState extends State<ExpertCall> {
   }
 
   Widget formUI() {
-    var scrWidth = width(context);
-    var scrHeight = height(context);
+
     return Stack(
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(height:height(context)*0.12,),
+            SizedBox(height:height(context)*0.04,),
             // Align(
             //   alignment: Alignment.centerLeft,
             //   child: Padding(
@@ -143,7 +162,7 @@ class _ExpertCallState extends State<ExpertCall> {
             //     //
             //   ),
             // ),
-            Align(
+           /* Align(
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(left: 42, top: 5),
@@ -157,7 +176,7 @@ class _ExpertCallState extends State<ExpertCall> {
                   ),
                 ),
               ),
-            ),
+            ),*/
             SizedBox(
               height: 40,
             ),
@@ -541,7 +560,7 @@ class _ExpertCallState extends State<ExpertCall> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
-                        fontFamily: "Open Sans",
+                        // fontFamily: "Open Sans",
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -602,7 +621,7 @@ class _ExpertCallState extends State<ExpertCall> {
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 15,
-                        fontFamily: "Open Sans",
+                        // fontFamily: "Open Sans",
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -612,6 +631,7 @@ class _ExpertCallState extends State<ExpertCall> {
             ]),
           ],
         ),
+
         // ClipPath(
         //   clipper: InnerClippedPart(),
         //   child: Container(
@@ -692,7 +712,7 @@ class _ExpertCallState extends State<ExpertCall> {
       "type_of_expert": expert
     });
     var response = await http.post(
-        Uri.parse('http://api.mapmycrop.store/schedule_call/?api_key=$api_key'),
+        Uri.parse('https://api.mapmycrop.com/schedule_call/?api_key=$api_key'),
         headers: {
           'accept': 'application/json',
           'Content-Type': "application/json"

@@ -119,7 +119,7 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
 
     var response = await http.get(Uri.parse(
         'https://api.mapmycrop.com/scouting/$farmId?api_key=$api_key'));
-    //print(response.body);
+    print(response.body);
     data = await jsonDecode(response.body);
     // var point = jsonDecode(data[0]["geometry"]);
     // print(point['coordinates']);
@@ -130,6 +130,9 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
       print(point['coordinates']);
       _setMarker(LatLng(point['coordinates'][1], point['coordinates'][0]));
       // print(p)
+      setState(() {
+        notetype=data[i]["note_type"];
+      });
     }
     // var uri = Uri.parse("https://app.mapmycrop.com/handler/get_scout_data.php");
     //
@@ -177,7 +180,7 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
             markerId: MarkerId(point.toString()),
             position: point,
             icon: customicon,
-            //infoWindow: _buildInfoWindow(point,notetype)
+            infoWindow: _buildInfoWindow(point,notetype)
         ),
       );
     });
@@ -203,13 +206,13 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
     farmNameList.clear();
     var api_key = prefs.getString('api_key');
     var response = await http
-        .get(Uri.parse('http://api.mapmycrop.store/farm/?api_key=$api_key'));
+        .get(Uri.parse('https://api.mapmycrop.com/farm/?api_key=$api_key'));
     //print(response.body);
     var data = await jsonDecode(response.body);
-    for (int i = 0; i < data['features'].length; i++) {
+    for (int i = 0; i < data.length; i++) {
       setState(() {
-        farmIdList.add(data['features'][i]['properties']['id']);
-        farmNameList.add(data['features'][i]['properties']['name']);
+        farmIdList.add(data[i]['id']);
+        farmNameList.add(data[i]['name']);
       });
     }
   }
@@ -293,76 +296,7 @@ class _ScoutingActivityState extends State<ScoutingActivity> {
 
   InfoWindow _buildInfoWindow(LatLng point, String notetype) {
     return InfoWindow(
-        title:'Click here',
-        onTap:(){
-          // print(notetype);
-          // print(point.toString());
-          if(notetype !=null && point != null){
-            return showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return StatefulBuilder(
-                      builder: (BuildContext context, StateSetter setState) {
-                        return Align(
-                          alignment: Alignment.center,
-                          child: Container(
-                            margin: EdgeInsets.all(30),
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.all(Radius.circular(10)),
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: <Widget>[
-                                _buildAvatar(),
-                                _buildLocationInfo(point,notetype),
-                                //_buildMarkerType()
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                  );
-                });
-          }
-          else{
-            return showDialog(
-                context: context,
-                barrierDismissible: true,
-                builder: (BuildContext context) {
-                  return StatefulBuilder(
-                      builder: (BuildContext context,
-                          StateSetter setState) {
-                        return AlertDialog(
-                          content: new SingleChildScrollView(
-                            child: new ListBody(
-                              children: <Widget>[
-                                Text('You have not saved this marker data.Save the data and then Continue...',
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: 18.0),),
-                                SizedBox(
-                                  height: 15.0,
-                                ),
-                                MaterialButton(
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text('Ok'),
-                                  color: Colors.blue,
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }
-                  );
-                });
-          }
-        }
+        title:notetype
     );
   }
 

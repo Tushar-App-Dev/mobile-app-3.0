@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../Screens/constant/Constant.dart';
 import '../constants/constants.dart';
+import 'CountryCode.dart';
 import 'ForgtPasswordActivity.dart';
 import 'RegisterActivity.dart';
 import 'Sign_up.dart';
@@ -23,15 +25,17 @@ class LoginPageActivity extends StatefulWidget {
 class _LoginPageActivityState extends State<LoginPageActivity> {
   GlobalKey<FormState> _key = new GlobalKey();
   Color c = const Color.fromARGB(255, 11, 175, 40);
-  String username="", pwd="",Email="";
+  String username="", pwd="",Email="",ccode = '';
   final phoneController = TextEditingController();
   final pwdController = TextEditingController();
   bool _obscureText = true;
-  bool _phonevalidate=true;
+  bool _phonevalidate1=true;
+  int _phonevalidate=1;
   int _passvalidate=1;
   //int _emaivalidate = 1;
   bool _emaivalidate=true;
   bool isLoading = false;
+
 
   bool _validate = false;
   String success;
@@ -40,6 +44,11 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
   void initState() {
     // TODO: implement initState
     super.initState();
+  }
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
   }
 
   @override
@@ -80,7 +89,7 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
               color: Colors.black,
               fontSize: 20,
               fontWeight: FontWeight.w600,
-              fontFamily: "Inter",
+              /*fontFamily: "Inter"*/
             ),
             textAlign: TextAlign.left,
           ),
@@ -95,7 +104,7 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
               style: TextStyle(
                 color: Colors.black,
                 fontSize: 24,
-                fontFamily: "Inter",
+                /*fontFamily: "Inter"*/
                 fontWeight: FontWeight.w700,
               ),
             )),
@@ -208,24 +217,24 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
         //     },
         //   ),
         // ),
-        Container(
+        /*Container(
           padding: EdgeInsets.only(top:10, bottom: 20, left: 30, right: 30),
           child: TextFormField(
             //validator: _validateEmail,
              //autovalidateMode:AutovalidateMode.always,
             style: new TextStyle(color: Colors.black,fontFamily: "Inter"),
-            keyboardType: TextInputType.text,
+            keyboardType: TextInputType.number,
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
               focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color:_phonevalidate?Colors.black:Colors.red),
+                  borderSide: BorderSide(color:_phonevalidate==1?Colors.black:Colors.red),
                   borderRadius: BorderRadius.all(Radius.circular(10))),
               enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color:_phonevalidate?Colors.black:Colors.red),
+                  borderSide: BorderSide(color:_phonevalidate==1?Colors.black:Colors.red),
                   borderRadius: BorderRadius.all(Radius.circular(10))),
-              hintText: _phonevalidate?'Phone Number':'Phone Number is Required',
-              hintStyle: TextStyle(color: _phonevalidate?Colors.black:Colors.red,fontFamily: "Inter"),
+              hintText: _phonevalidate==1?'Phone Number':'Phone Number is Required',
+              hintStyle: TextStyle(color: _phonevalidate==1?Colors.black:Colors.red,fontFamily: "Inter"),
               // labelText: 'Email ID / Phone Number',
               //floatingLabelBehavior: FloatingLabelBehavior.auto
             ),
@@ -242,11 +251,85 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
             //   }
             // },
             onChanged: (String value) {
-              username = value;
+
               setState(() {
-                _phonevalidate=true;
+                username = value;
+                // _phonevalidate=true;
               });
             },
+          ),
+        ),*/
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 30,vertical: 5),
+          //padding: EdgeInsets.only(top:5, bottom: 5, left: 30, right: 30),
+          //color: Colors.white,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            //color: Colors.blueAccent,
+            border: Border.all(width: 1,color: Colors.black,),
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: IntlPhoneField(
+              phonevalidate: _phonevalidate,
+              //validator: _validatePhone,
+              style: new TextStyle(color: Colors.black, fontFamily: "Inter"),
+              keyboardType: TextInputType.phone,
+              initialCountryCode: "IN",
+              countryCodeTextColor: Colors.black,
+              showCountryFlag: true,
+              showDropdownIcon: false,
+              decoration: InputDecoration(
+                //contentPadding:EdgeInsets.symmetric(horizontal: 20),
+                filled: true,
+                fillColor: Colors.white,
+                focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+                enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                    borderRadius: BorderRadius.all(Radius.circular(10))),
+                hintText: _phonevalidate == 1 ?'Phone Number' : 'Number is Required',
+                hintStyle: TextStyle(color: _phonevalidate == 1 ? Colors.black : Colors.red,
+                    fontFamily: "Inter"),
+                // labelText: 'Phone Number',
+              ),
+              onChanged: (phone) {
+                setState(() {
+                  username = phone.number;
+                  ccode = phone.countryCode.substring(1);
+                });
+                //print(phone.number);
+              },
+              onCountryChanged: (phone) {
+                setState(() {
+                  ccode = phone.countryCode.substring(1);
+                  print('Country code changed to: ' +
+                      phone.countryCode.substring(1));
+                });
+              },
+              validator: (String value) {
+                String pattern =
+                    r'^[+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*$';
+                RegExp regExp = new RegExp(pattern);
+                if (value.length == 0) {
+                  setState(() {
+                    _phonevalidate = 2;
+                  });
+                } else if (!regExp.hasMatch(value)) {
+                  setState(() {
+                    _phonevalidate = 3;
+                    print('Invalid Number');
+                  });
+                  return 'Invalid Number';
+                } else {
+                  setState(() {
+                    _phonevalidate = 1;
+                  });
+                }
+              },
+            ),
           ),
         ),
         Container(
@@ -310,18 +393,18 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
           padding: EdgeInsets.only(top: 10, bottom: 20, left: 30, right: 30),
           child: GestureDetector(
             onTap: () {
-              //Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgtPasswordActivity()));
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>ForgtPasswordActivity()));
             },
             child: Container(
               alignment: Alignment.centerRight,
               margin: EdgeInsets.only(top: 10, right: 5),
               child: ChangedLanguage(text:
-                "Forgot Password ?",
+                "Forgot Password? ",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 16,
-                  fontFamily: "Inter",
+                  /*fontFamily: "Inter"*/
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -473,13 +556,17 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
       if(username.isEmpty){
         setState((){
           //_emaivalidate =false;
-          _phonevalidate = false;
+          _phonevalidate = 2;
         });
+        print('please enter username1  $_phonevalidate');
+
       }else {
         setState((){
           _emaivalidate =false;
-          //_phonevalidate = false;
+          _phonevalidate = 2;
         });
+        print('please enter username2 $_phonevalidate');
+
       }
       print('please enter email or phonenumber');
     }
@@ -514,11 +601,11 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
     //print(email);
     print(pwd);
     var user;
-    if(username.isNotEmpty){
+    if(username.isNotEmpty&&email.isEmpty){
       setState(() {
         user=username;
       });
-    }else if(email.isNotEmpty){
+    }else if(email.isNotEmpty&&username.isEmpty){
       setState(() {
         user=email;
       });
@@ -530,8 +617,12 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
 
     SharedPreferences prefs = await SharedPreferences.getInstance();
     var data, datavalue;
-    var body = {
+    var body1 = {
       "username": user,
+      "password": pwd
+    };
+    var body = {
+      "username": "$ccode$user",
       "password": pwd
     };
 
@@ -545,14 +636,15 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
     },body: body);
     print(response.statusCode);
     print(response.body);
+
+    Future.delayed(Duration(seconds:15), (){
+      setState((){
+        isLoading = false;
+      });
+    });
+
     var result = jsonDecode(response.body);
     print(result['token']);
-
-    // Future.delayed(Duration(seconds:30), (){
-    //   setState((){
-    //     isLoading = false;
-    //   });
-    // });
 
     if (response.statusCode == 200||response.statusCode == 201){
 
@@ -574,6 +666,13 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
             prefs.setString('token_type', data['token_type']);
             prefs.setString('api_key', data['apikey']);
             prefs.setBool('_isLoggedIn', true);
+            FirebaseAnalytics.instance.logEvent(
+              name: "login",
+              parameters: {
+                "content_type": "Activity_planned",
+                "api_key": data['apikey'],
+              },
+            ).onError((error, stackTrace) => print('analytics error is $error'));
             Navigator.pop(context);
             Navigator.pushReplacement(
                 context,
@@ -583,6 +682,79 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
           }
       );
     } else {
+      setState((){
+        isLoading = false;
+      });
+      response = await http.post(Uri.parse("https://api.mapmycrop.com/auth/login"),headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "accept": "application/json"
+      },body: body1);
+      if (response.statusCode == 200||response.statusCode == 201){
+
+        setState((){
+          isLoading = false;
+        });
+        print('Uploaded!');
+        //response.stream.transform(utf8.decoder).listen((value) async {
+        //data = jsonDecode(response.body);
+        data= jsonDecode(response.body);
+        print(data);
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.success,
+            text: await changeLanguage('Logged-In Successfully!'),
+            confirmBtnText:await changeLanguage('Ok'),
+            onConfirmBtnTap:(){
+              prefs.setString('token', data['token']);
+              prefs.setString('token_type', data['token_type']);
+              prefs.setString('api_key', data['apikey']);
+              prefs.setBool('_isLoggedIn', true);
+              Navigator.pop(context);
+              Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                      builder: (BuildContext context) =>
+                          DashboardActivity()));
+            }
+        );
+      } else {
+        setState((){
+          isLoading = false;
+        });
+        QuickAlert.show(
+            context: context,
+            type: QuickAlertType.error,
+            title: 'Oops...',
+            text: await changeLanguage('Wrong username or password. Please enter the correct details'),
+            onConfirmBtnTap:(){
+              Navigator.pop(context);
+              setState((){
+                isLoading = false;
+              });
+            }
+        );
+        // showDialog(
+        //     context: context,
+        //     builder: (BuildContext context) {
+        //       return AlertDialog(
+        //         backgroundColor: Colors.red[100],
+        //         title: Text("Invalid Credentials"),
+        //         content: Text("Please enter valid credentials"),
+        //         actions: <Widget>[
+        //           IconButton(
+        //               icon: Icon(Icons.check),
+        //               onPressed: () {
+        //                 Navigator.of(context).pop();
+        //               })
+        //         ],
+        //       );
+        //     });
+      }
+
+     /* print(response.statusCode);
+      print(response.body);
+      var result = jsonDecode(response.body);
+      print(result['token']);
       QuickAlert.show(
         context: context,
         type: QuickAlertType.error,
@@ -594,7 +766,7 @@ class _LoginPageActivityState extends State<LoginPageActivity> {
             isLoading = false;
           });
         }
-      );
+      );*/
       // showDialog(
       //     context: context,
       //     builder: (BuildContext context) {

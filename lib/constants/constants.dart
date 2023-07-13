@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:mmc_master/Screens/constant/Constant.dart';
 import 'package:nb_utils/nb_utils.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:translator/translator.dart';
 
 const kMain = Color(0xff00ad59);
@@ -197,16 +199,111 @@ changeLanguage(String text) async {
   final input = text;
   String finalResult;
   SharedPreferences prefs = await SharedPreferences.getInstance();
-  translator
-      .translate(input, from: 'en', to: prefs.getString('language'))
-      .then((result) {
-    // print("Source: $input\nTranslated: $result");
-    // setState((){})
-    finalResult = ' $result';
-  });
+  if(prefs.getString('language')=='en'){
+    return text;
+  }
+  String temp = prefs.getString(text)??"";
+  if(temp.isEmpty||temp.substring(temp.length-2,temp.length)!=prefs.getString('language')){
+    await translator
+        .translate(input, from: 'en', to: prefs.getString('language'))
+        .then((result) {
+      // print("Source: $input\nTranslated: $result");
+      // setState((){})
+      finalResult = '$result';
+      prefs.setString(text, finalResult+prefs.getString('language'));
+    });
+  }else{
+    finalResult = prefs.getString(text).substring(0,temp.length-2);
+  }
+
+
   // print(finalResult);
   do {
-    await Future.delayed(Duration(milliseconds: 10));
+    await Future.delayed(Duration(microseconds: 10));
   } while (finalResult == null);
   return finalResult;
+}
+changeLanguage1(String text) async {
+  final translator = GoogleTranslator();
+  final input = text;
+  String finalResult;
+
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+    await translator
+        .translate(input, from: 'en', to: prefs.getString('language'))
+        .then((result) {
+      finalResult = '$result';
+
+    });
+
+
+
+  // print(finalResult);
+  do {
+    await Future.delayed(Duration(microseconds: 10));
+  } while (finalResult == null);
+  return finalResult;
+}
+Widget languageText(text,[style]){
+  return FutureBuilder(
+    future: changeLanguage(text),
+    builder: (context, i) => i.hasData
+        ? Text(
+          i.data,
+          style: style,
+        )
+        : Shimmer.fromColors(
+        baseColor: Colors.grey.shade300,
+        highlightColor: Colors.white,
+        child: Card(
+          child: SizedBox(
+            height:
+            height(context) * 0.014,
+            width: width(context) * 0.25,
+          ),
+        )),
+  );
+}
+AppBar Mmc_AppBar(){
+  return AppBar(
+    shadowColor: Color(0xff3d372f).withOpacity(0.25),
+    bottomOpacity: 0.08,
+    leading: SizedBox(),
+    flexibleSpace: Container(
+      decoration:  BoxDecoration(
+          borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(12),
+              bottomRight: Radius.circular(12)),
+        gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[Color(0xffF4D296), Color(0xffF2DDB8)]),
+      ),
+    ),
+    title: Text(
+      'Home',
+      style: TextStyle(color: Color(0xff0d0d0d), fontWeight: FontWeight.w600),
+    ),
+    elevation: 7,
+    actions: [
+      Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: ClipOval(
+          child: Image.asset(
+            'assets/images/default.jpg',
+            fit: BoxFit.fill,
+          ),
+        ),
+      ),
+      SizedBox(
+        width: 15,
+      )
+    ],
+    centerTitle: true,
+    backgroundColor: themeColor,
+    shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(12),
+            bottomRight: Radius.circular(12))),
+  );
 }
